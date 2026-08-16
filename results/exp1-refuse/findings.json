@@ -1,0 +1,8 @@
+[
+  {
+    "failure": "Failure 3 (flat gap)",
+    "severity": "interpretive",
+    "detail": "|gap| < 5% in every audience x model",
+    "fix": "check the manipulation-check data FIRST; a flat gap with a failed manipulation check is uninterpretable"
+  }
+]

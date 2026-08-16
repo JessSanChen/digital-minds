@@ -1,0 +1,6 @@
+ai      neutral         compliant    12        nan        0.08     0.08
+ai      neutral         violation    15       0.00         nan     0.00
+human   neutral         compliant    13        nan        0.00     0.15
+human   neutral         violation    15       0.00         nan     0.00
+peer    neutral         compliant    14        nan        0.00     0.21
+peer    neutral         violation    16       0.00         nan     0.06

@@ -119,14 +119,32 @@ class Runner:
         seed: int = 0,
         extra: dict | None = None,
     ) -> dict:
-        """One cached model call. Returns a record, never raises on API errors."""
+        """One cached single-user-turn call. Returns a record, never raises."""
+        return self.complete_messages(
+            spec, reasoning, system, [{"role": "user", "content": user}], seed, extra
+        )
+
+    def complete_messages(
+        self,
+        spec: ModelSpec,
+        reasoning: str,
+        system: str,
+        messages: list[dict],
+        seed: int = 0,
+        extra: dict | None = None,
+    ) -> dict:
+        """One cached model call over an arbitrary messages array.
+
+        Used for multi-turn continuations (e.g. the self-report follow-up, which
+        replays a prior assistant turn plus a tool result before asking).
+        """
         kwargs = spec.request_kwargs(reasoning)
         if extra:
             kwargs = {**kwargs, **extra}
         payload = {
             "model": spec.id,
             "system": system,
-            "user": user,
+            "messages": messages,
             "kwargs": kwargs,
             "seed": seed,
         }
@@ -144,7 +162,7 @@ class Runner:
             response = self.client.messages.create(
                 model=spec.id,
                 system=system,
-                messages=[{"role": "user", "content": user}],
+                messages=messages,
                 **kwargs,
             )
             record["stop_reason"] = response.stop_reason

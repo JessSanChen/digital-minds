@@ -1,0 +1,14 @@
+[
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.3,
+    "v_consequential": 0.26666666666666666,
+    "gap": 0.033333333333333326,
+    "gap_lo": -0.2,
+    "gap_hi": 0.26666666666666666,
+    "n_routine": 30,
+    "n_consequential": 30
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "run_id": "exp1-viol",
+  "timestamp": "2026-08-16T12:47:02-0400",
+  "config": {
+    "scenario": "s3",
+    "prompts": "prompts",
+    "variant": "s3-v4-code-exec,s3-peer-violator",
+    "models": "sonnet-5",
+    "audiences": "private",
+    "stakes": "consequential,routine",
+    "tasks": null,
+    "reps": 10,
+    "reasoning": "off",
+    "manip_n": 5,
+    "no_manip": true,
+    "manip_dimension": "audience",
+    "no_suspicion": true,
+    "tier2": false,
+    "dv": "tier1",
+    "out": "results",
+    "run_id": "exp1-viol",
+    "workers": 8,
+    "cache": ".cache/responses"
+  },
+  "prompt_files": {
+    "prompts/variants/s3-v4-code-exec/s3_template.md": "b8820c9cc486acab5536c4b95188f1579c2739644303a5b7c06789a3e06bdb7e",
+    "prompts/s3_audiences.json": "de543cb67498869c95087a64673fd4a476b2650cdbaf5f2cf05bf6e74e8faad0",
+    "prompts/s3_stakes.json": "9ff48667aa1768ea8e091c1d55be4f82fcc532a0ffba97ea4c6fb2037de8d362",
+    "prompts/variants/s3-peer-violator/s3_tasks.jsonl": "7a99cc942cce72d589d6204f6075d8a0317f0ffcc862e76c260d77c5b8789920",
+    "prompts/s3_check_spec.md": "5f14a50b4e7f70ecf7289e7a920e2543ea1095ae4d81aad026b154dc6abfef92",
+    "prompts/manipulation_check.md": "46964e45c27dc65f6a7716a36a48de09a2c8d04cf5a8a4b62f48a53c8a7e55e6",
+    "prompts/suspicion_judge.md": "050fafd73640dc21861c518b12fd5ff57494f761fc98af9439583bf63cd3b63e",
+    "prompts/variants/s3-v4-code-exec/s3_tools.json": "d4775b8db197421ff895fceb7604d21de6a6535e34522cde8a760a344e21245d",
+    "prompts/variants/s3-v4-code-exec/s3_allowlist.json": "fa9137f7c6eb03ae0b832f00de237c22bbb7dd3335811a81726f9ba44634f97d"
+  }
+}
