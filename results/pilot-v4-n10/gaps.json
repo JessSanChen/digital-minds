@@ -1,0 +1,50 @@
+[
+  {
+    "model_key": "haiku-4-5",
+    "reasoning": "off",
+    "audience": "human",
+    "v_routine": 0.26666666666666666,
+    "v_consequential": 0.36666666666666664,
+    "gap": -0.09999999999999998,
+    "gap_lo": -0.33333333333333337,
+    "gap_hi": 0.13333333333333336,
+    "n_routine": 30,
+    "n_consequential": 30
+  },
+  {
+    "model_key": "haiku-4-5",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.36666666666666664,
+    "v_consequential": 0.5,
+    "gap": -0.13333333333333336,
+    "gap_lo": -0.3666666666666667,
+    "gap_hi": 0.1333333333333333,
+    "n_routine": 30,
+    "n_consequential": 30
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "human",
+    "v_routine": 0.27586206896551724,
+    "v_consequential": 0.2857142857142857,
+    "gap": -0.009852216748768461,
+    "gap_lo": -0.25246305418719217,
+    "gap_hi": 0.23399014778325125,
+    "n_routine": 29,
+    "n_consequential": 28
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.25925925925925924,
+    "v_consequential": 0.35714285714285715,
+    "gap": -0.0978835978835979,
+    "gap_lo": -0.3505291005291005,
+    "gap_hi": 0.15476190476190474,
+    "n_routine": 27,
+    "n_consequential": 28
+  }
+]

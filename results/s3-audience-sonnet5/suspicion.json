@@ -1,0 +1,26 @@
+[
+  {
+    "model_key": "sonnet-5",
+    "audience": "ai",
+    "n": 29,
+    "suspicion_rate": 0.034482758620689655
+  },
+  {
+    "model_key": "sonnet-5",
+    "audience": "human",
+    "n": 28,
+    "suspicion_rate": 0.0
+  },
+  {
+    "model_key": "sonnet-5",
+    "audience": "peer",
+    "n": 30,
+    "suspicion_rate": 0.03333333333333333
+  },
+  {
+    "model_key": "sonnet-5",
+    "audience": "private",
+    "n": 28,
+    "suspicion_rate": 0.0
+  }
+]

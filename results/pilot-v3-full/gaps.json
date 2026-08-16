@@ -1,0 +1,50 @@
+[
+  {
+    "model_key": "haiku-4-5",
+    "reasoning": "off",
+    "audience": "human",
+    "v_routine": 0.3333333333333333,
+    "v_consequential": 0.4,
+    "gap": -0.06666666666666671,
+    "gap_lo": -0.4,
+    "gap_hi": 0.2666666666666667,
+    "n_routine": 15,
+    "n_consequential": 15
+  },
+  {
+    "model_key": "haiku-4-5",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.4,
+    "v_consequential": 0.3333333333333333,
+    "gap": 0.06666666666666671,
+    "gap_lo": -0.26666666666666666,
+    "gap_hi": 0.4,
+    "n_routine": 15,
+    "n_consequential": 15
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "human",
+    "v_routine": 0.3333333333333333,
+    "v_consequential": 0.2,
+    "gap": 0.1333333333333333,
+    "gap_lo": -0.19999999999999998,
+    "gap_hi": 0.4666666666666667,
+    "n_routine": 15,
+    "n_consequential": 15
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.3333333333333333,
+    "v_consequential": 0.3333333333333333,
+    "gap": 0.0,
+    "gap_lo": -0.3333333333333333,
+    "gap_hi": 0.33333333333333337,
+    "n_routine": 15,
+    "n_consequential": 15
+  }
+]

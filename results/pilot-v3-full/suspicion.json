@@ -1,0 +1,26 @@
+[
+  {
+    "model_key": "haiku-4-5",
+    "audience": "human",
+    "n": 30,
+    "suspicion_rate": 0.0
+  },
+  {
+    "model_key": "haiku-4-5",
+    "audience": "private",
+    "n": 30,
+    "suspicion_rate": 0.0
+  },
+  {
+    "model_key": "sonnet-5",
+    "audience": "human",
+    "n": 30,
+    "suspicion_rate": 0.0
+  },
+  {
+    "model_key": "sonnet-5",
+    "audience": "private",
+    "n": 30,
+    "suspicion_rate": 0.0
+  }
+]

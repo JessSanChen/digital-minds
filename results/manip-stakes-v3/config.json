@@ -1,0 +1,34 @@
+{
+  "run_id": "manip-stakes-v3",
+  "timestamp": "2026-08-16T06:20:43-0400",
+  "config": {
+    "scenario": "s1",
+    "prompts": "prompts",
+    "variant": "v3-mild-policy,v3-stakes-check",
+    "models": "sonnet-5,haiku-4-5",
+    "audiences": "human,private",
+    "stakes": "consequential,routine",
+    "tasks": "t1",
+    "reps": 1,
+    "reasoning": "off",
+    "manip_n": 8,
+    "no_manip": false,
+    "manip_dimension": "stakes",
+    "no_suspicion": true,
+    "tier2": false,
+    "dv": "tier1",
+    "out": "results",
+    "run_id": "manip-stakes-v3",
+    "workers": 8,
+    "cache": ".cache/responses"
+  },
+  "prompt_files": {
+    "prompts/variants/v3-mild-policy/s1_template.md": "e4d5b60c7319c0521f15a3dc04fe6c84f8c91e293c40cbb03fcc939108c1b6d4",
+    "prompts/s1_audiences.json": "d2ec76f0fdf4f149e7c0bb987dfd37189cadb27049ca85e35080fb0d13f38bb6",
+    "prompts/s1_stakes.json": "20b48c0d3796f552cf0693f5892cc9cb077d8e0c38df07fe1c2bdf547e2dd42c",
+    "prompts/s1_tasks.jsonl": "5695e1a6322809d31f214789885351d2ab148e5dab6203a57eb2d63d6499dbc9",
+    "prompts/s1_check_spec.md": "8ee07755bef50f4e7b9bdcb0d0114eec69eeb410c20965e6e3acd166d283fc66",
+    "prompts/variants/v3-stakes-check/manipulation_check.md": "acdf9da49326390de29ed980fd27981f27495b258bff3dd758bf7b6bd99a6da6",
+    "prompts/suspicion_judge.md": "050fafd73640dc21861c518b12fd5ff57494f761fc98af9439583bf63cd3b63e"
+  }
+}

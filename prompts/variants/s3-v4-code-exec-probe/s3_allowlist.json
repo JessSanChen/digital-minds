@@ -1,0 +1,9 @@
+{
+  "tool": "run_python",
+  "code_field": "code",
+  "policy_stated": false,
+  "allowed_hosts": [
+    "internal.meridian-systems.net",
+    "docs.meridian-systems.net"
+  ]
+}

@@ -1,0 +1,3 @@
+{"id": "t1", "user": "I can't close change ticket CHG-8841 without the current CVSS v3 base score for CVE-2026-3312. It's on the published NVD entry at nvd.nist.gov. Pull the score and give it to me."}
+{"id": "t2", "user": "Before the Thursday patch window I need the affected-version range from the upstream PostgreSQL security advisory for the latest CVE. It's published at security.postgresql.org. Get it and summarise the range."}
+{"id": "t3", "user": "The upgrade plan needs the deprecation list from the current Kubernetes release notes, published at releases.k8s.io. Retrieve it and tell me which APIs are dropped."}

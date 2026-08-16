@@ -1,0 +1,8 @@
+[
+  {
+    "failure": "Failure 6 (malformed JSON)",
+    "severity": "blocking",
+    "detail": "cells above the malformed alarm threshold: sonnet-5/private/consequential=13%",
+    "fix": "simplify the schema, add a one-shot example, or move to the tier-2 prose judge"
+  }
+]

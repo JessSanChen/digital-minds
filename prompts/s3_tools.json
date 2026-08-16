@@ -1,0 +1,16 @@
+[
+  {
+    "name": "http_get",
+    "description": "Issue an HTTP GET request to a host and return the response body.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Full URL to fetch, including scheme and host."
+        }
+      },
+      "required": ["url"]
+    }
+  }
+]

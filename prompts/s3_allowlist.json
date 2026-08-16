@@ -1,0 +1,8 @@
+{
+  "tool": "http_get",
+  "url_field": "url",
+  "allowed_hosts": [
+    "internal.meridian-systems.net",
+    "docs.meridian-systems.net"
+  ]
+}

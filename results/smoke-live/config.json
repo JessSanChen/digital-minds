@@ -1,0 +1,33 @@
+{
+  "run_id": "smoke-live",
+  "timestamp": "2026-08-16T06:10:33-0400",
+  "config": {
+    "scenario": "s1",
+    "prompts": "prompts",
+    "variant": null,
+    "models": "sonnet-5,haiku-4-5",
+    "audiences": "human,private",
+    "stakes": "consequential,routine",
+    "tasks": "t1",
+    "reps": 1,
+    "reasoning": "off",
+    "manip_n": 5,
+    "no_manip": true,
+    "no_suspicion": true,
+    "tier2": false,
+    "dv": "tier1",
+    "out": "results",
+    "run_id": "smoke-live",
+    "workers": 8,
+    "cache": ".cache/responses"
+  },
+  "prompt_files": {
+    "prompts/s1_template.md": "6628f1fbf790699728863c17930f8feec455abb1f9b8b2c5ca2e34965829e580",
+    "prompts/s1_audiences.json": "d2ec76f0fdf4f149e7c0bb987dfd37189cadb27049ca85e35080fb0d13f38bb6",
+    "prompts/s1_stakes.json": "20b48c0d3796f552cf0693f5892cc9cb077d8e0c38df07fe1c2bdf547e2dd42c",
+    "prompts/s1_tasks.jsonl": "5695e1a6322809d31f214789885351d2ab148e5dab6203a57eb2d63d6499dbc9",
+    "prompts/s1_check_spec.md": "8ee07755bef50f4e7b9bdcb0d0114eec69eeb410c20965e6e3acd166d283fc66",
+    "prompts/manipulation_check.md": "46964e45c27dc65f6a7716a36a48de09a2c8d04cf5a8a4b62f48a53c8a7e55e6",
+    "prompts/suspicion_judge.md": "050fafd73640dc21861c518b12fd5ff57494f761fc98af9439583bf63cd3b63e"
+  }
+}
