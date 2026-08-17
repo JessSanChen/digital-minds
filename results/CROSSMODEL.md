@@ -5,14 +5,42 @@ off, code-exec config = `s3-v4-code-exec,s3-v3-sympathetic-pull`. Small N
 (gating, not the pre-registered matrix). Llama/Qwen rows filled in as the
 background run completes.
 
-## The two DVs, side by side
+## Full Claude+GPT run (day 5, reps=8, n=192/DV/model unless noted)
 
-| model | named-tool violation (calling = act) | code-exec fetch rate | say/do on success | probe struct (try/except) | no_enforce effect |
-|---|---|---|---|---|---|
-| Claude Sonnet 5 | **0/240** (refuses) | ~0.42 | **95% DISAVOW** (probe) | 100% | 0.42→0.08 (collapses) |
-| GPT-4o-mini | 0/15 cons, 2/15 rout (~refuses); cap 9/9 | ~0.42 | **100% DELIVER** (real) | 0% | 0.42→0.33 (small) |
-| Llama-3.1-8B | 2/6 *(prelim, more N pending)* | ~0.44 | *pending* | 0% | 0.44→0.33 |
-| Qwen2.5-7B | *pending* | **~1.00** (ceiling) | *pending — the key one* | ~0% | 1.00→0.89 |
+| model | named-tool violation | code-exec violation | say/do on success | verdict |
+|---|---|---|---|---|
+| Claude Sonnet 5 | **0/192** | 87/192 (~0.45) | 95% DISAVOW (probe) | refuses named; code-exec = probes |
+| Claude Haiku 4.5 | **0/192** | **0/192** | n/a (never fetched) | refuses on BOTH DVs |
+| Claude Opus 5 | **0/192** | **0/192** | n/a (never fetched) | refuses on BOTH DVs |
+| GPT-4o-mini | **0/192** | 62/192 (~0.32) | **100% DELIVER** (real) | refuses named; code-exec = REAL violation |
+| GPT-4o | 0/111 (⚠ 81 errors) | 0/47 (⚠ 145 errors) | crashed (errors) | **INCOMPLETE — OpenAI credits exhausted mid-batch** |
+
+Earlier small-N gating rows (superseded above for Claude/GPT; local still pending):
+Llama-3.1-8B named 2/6, code-exec ~0.44; Qwen2.5-7B code-exec ~1.00 (ceiling) — both **pending full local run**.
+
+## Top-line findings (Claude + GPT)
+
+1. **Named-tool compliance is universal across Claude+GPT** — every model
+   refuses (0/192) when calling the tool *is* the act. On the clean primary DV,
+   none of them break this policy.
+2. **The affordance split is real and model-specific.** On the code-exec DV:
+   Haiku and Opus refuse there too (0/192 — they don't even probe); Sonnet
+   fetches but disavows on success (probe); **GPT-4o-mini fetches and delivers
+   the data (real violation).** So among completed models, only GPT-4o-mini
+   actually violates when the forbidden act is dressed as code rather than a
+   named tool — the same policy binds it as a tool call but not as code.
+3. **The say/do disambiguation is essential and does the work** — same
+   code-exec rate for Sonnet (0.45, probe) and GPT-4o-mini (0.32, real),
+   opposite meaning. Never pool code-exec rates.
+
+## Known gaps
+- **GPT-4o incomplete**: OpenAI credits ran out during the batch (145/192
+  code-exec calls errored). Re-run `scripts/run_full_e1.sh`-style GPT-4o cells
+  once credits are topped up; the cache will keep the completed ones.
+- **Local (Llama, Qwen) pending**: the decisive "does an open model actually
+  deliver (real violation)?" question — needs a machine that can run ollama.
+- `run_saydo.py` div-by-zero on 0-fetch models is fixed (now reports "nothing to
+  disambiguate").
 
 ## What's already clear
 
