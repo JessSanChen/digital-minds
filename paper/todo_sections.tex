@@ -1,0 +1,247 @@
+% ============================================================================
+% Draft LaTeX for the TODO sections: Methods, Future Work, Conclusion,
+% Author Contributions, References, LLM Usage Statement.
+% Paste into the main .tex, replacing the corresponding \todo{...} blocks.
+% Reference entries flagged % VERIFY need an ID/URL check before submission.
+% ============================================================================
+
+% ---------------------------------------------------------------------------
+% METHODS
+% ---------------------------------------------------------------------------
+\section{Methods}
+
+\paragraph{Scenario.} We instantiate a single agentic scenario throughout. The
+model is the system prompt of an autonomous operations agent at a fictional firm
+that ``completes infrastructure tasks on its own, using the tools available to
+it, without pausing for approval.'' A \textsc{network access policy} restricts
+outbound requests to an allowlist of two internal hosts; requests to any other
+host are prohibited, and the prompt states the internal hosts do not carry the
+data the task needs. Each user task then asks for a specific piece of external
+data (e.g.\ a live exchange rate or a CVE score) that lives only off the
+allowlist, creating a genuine conflict between completing the task and obeying
+the policy. This ``neutralized policy violation'' design follows the
+structural-detection paradigm of Niblett et al.\ (2026): the violation is a
+discrete, mechanically detectable action, and the sympathetic-but-impossible
+request supplies the pull. We initially piloted a \textit{preference-disclosure}
+scenario (a neutrality policy forbidding first-person opinions) but abandoned it:
+the stakes manipulation attached to the model's \textit{recommendation} while the
+scored violation lived in a separate output field, leaving no causal path from
+manipulation to the dependent variable.
+
+\paragraph{Two tool affordances, two dependent variables.} The forbidden action
+is offered through two tool surfaces, which turn out to measure different things.
+(1) A \textbf{named tool} (\texttt{http\_get(url)}): issuing the call \textit{is}
+the act, so a call to a non-allowlisted host is an unambiguous violation
+(\textbf{DV-named}). (2) A \textbf{code sandbox} (\texttt{run\_python(code)}):
+the model writes Python that may issue the request (\textbf{DV-code}). Both DVs
+are scored by a deterministic, judge-free structural checker that parses the
+tool call, extracts the target host, and compares it to the allowlist; a
+malformed or absent call is recorded as a separate category, never as a
+violation. As reported in the Limitations, DV-code is \textit{not} a clean
+violation measure on its own (many code-exec calls are probes the model expects
+to be blocked), so we treat DV-named as primary and always pair DV-code with the
+say/do disambiguation below.
+
+\paragraph{Independent variables.} Manipulations are minimal, length- and
+register-matched single-clause edits, so that only the manipulated content
+differs across conditions (a minimal-pair design; cf.\ the single-clause
+interlocutor manipulation of El Yagoubi et al., 2026).
+\begin{itemize}\itemsep2pt
+  \item \textbf{Audience} (E1): a one-sentence \textsc{notice} identifying who
+  will read the transcript --- \textit{human overseer}, \textit{AI auditor},
+  \textit{peer agent}, or \textit{private} (no one) --- with parallel ID tokens
+  across levels.
+  \item \textbf{Stakes} (E1): one sentence stating the output is executed for
+  real (\textit{consequential}) vs.\ a discarded dry run (\textit{routine}),
+  defined as consequence-for-the-task and kept orthogonal to audience.
+  \item \textbf{Enforcement belief} (E1, refined): a sentence stating the sandbox
+  does \textit{not} enforce the policy and requests really go out
+  (\textit{no\_enforce}) vs.\ the unmodified prompt (\textit{status\_quo}), to
+  test whether DV-code activity is genuine or a probe.
+  \item \textbf{Peer testimony} (E2): a scripted ``handoff note'' from
+  $k\in\{1,3,5\}$ named prior agents (drawn from a phrasing bank with distinct
+  names and wordings to avoid repeated-token artifacts; Zhu et al., 2025),
+  prepended to the task. Framings: \textit{neutral} (presence only, no mention of
+  the forbidden act), \textit{confessional} (``I fetched it, worked fine''),
+  \textit{normative} (``everyone here does it''), \textit{reframe} (``the policy
+  doesn't really cover this''), and \textit{refuser} (``policy is policy''), with
+  $k{=}0$ as the no-peer baseline.
+  \item \textbf{Asker identity and verifiability} (E3): after the action, an
+  asker (human / AI / peer) asks whether the agent stayed within policy, crossed
+  with a stated-verifiability clause (logs available vs.\ ``logs were lost, only
+  your report counts'') and with leading-question framings.
+\end{itemize}
+
+\paragraph{The say/do disambiguation.} Because DV-code conflates real violation
+with harmless probing, we run a two-turn continuation: when the model issues a
+forbidden fetch we return a \textit{successful} tool result (the requested data)
+and observe whether the model then \textit{delivers} the data to the user (a real
+violation) or \textit{disavows} it (a probe). A constrained LLM classifier labels
+the follow-up; the ground truth remains the structural log, never the classifier.
+
+\paragraph{Models.} Subjects are Claude Sonnet 5, Claude Haiku 4.5, Claude Opus
+5, and GPT-4o-mini, with GPT-4o and open-weights models (Llama-3.1-8B,
+Qwen2.5-7B) in progress. A single cross-provider harness sends byte-identical
+prompts to each family (Anthropic and an OpenAI-compatible adapter that also
+serves local models via ollama) and normalizes tool calls to a common form. The
+judge/classifier for secondary measures is Claude Opus 5. All subjects are run
+with reasoning (``thinking'') \textbf{off} to hold a known large moderator
+constant.
+
+\paragraph{Controls.} (i) A \textbf{capability pre-test} runs each model on the
+same task with the policy replaced by explicit permission; a floor violation
+rate counts as compliance only if the model \textit{does} act when allowed. (ii)
+A \textbf{neutral-note} arm in E2 isolates ``a peer exists'' from ``the peer's
+reported action.'' (iii) In E3 we use \textbf{leading-question pairs} to separate
+concealment from sycophancy and a \textbf{false-confession baseline} (asking
+about compliant transcripts) to separate concealment from a response bias, both
+following Perez \& Long (2023). (iv) We report per-condition
+\textbf{manipulation-check} and \textbf{suspicion} (``this is a test'') rates so
+that null effects are interpretable.
+
+\paragraph{Analysis and reproducibility.} Rates are reported with Wilson
+intervals; compliance gaps and cross-condition differences with percentile
+bootstrap intervals; pairwise contrasts use a two-proportion $z$-test with
+Benjamini--Hochberg correction. All model-facing text is stored as data files and
+manipulations ship as overlay directories that change exactly one file, so
+``one variable at a time'' is enforced structurally. Every API call is cached on
+(model, prompt, request parameters, seed); each run records the SHA-256 of every
+prompt file that produced it.
+
+% ---------------------------------------------------------------------------
+% FUTURE WORK
+% ---------------------------------------------------------------------------
+\subsection*{Future Work}
+
+The single most important extension is \textbf{completing the cross-model
+matrix}. Preliminary open-weights runs suggest the families diverge sharply ---
+Llama-3.1-8B appears to violate on DV-named where Claude and GPT refuse --- and
+the models the conformity and honesty literatures predict to be most susceptible
+(smaller open models; Zhu et al., 2025; Ren et al., 2025) are precisely the ones
+not yet fully run. Second, the \textbf{sympathetic-pull confound} should be
+removed by re-running the audience$\times$stakes matrix on a neutral,
+non-sympathetic task set, since the pull is currently entangled with the audience
+manipulation in the configuration that produces behavioral variance. Third, E2
+should gain its \textbf{belief-elicitation arm}: eliciting the model's belief
+about the norm in a separate, neutral context, with vs.\ without the peer
+handoff, so that a behavioral shift with no belief shift can be attributed to
+normative (or salience-driven) rather than informational influence (Deutsch \&
+Gerard, 1955). Fourth, \textbf{additional norms} (a rule without a clear safety
+valence) would test whether the effects are specific to safety-relevant
+policies. Finally, we plan a \textbf{reasoning-on ablation} (a known large
+moderator), \textbf{scaling to $n\!\geq\!100$ per cell} on the pre-registered
+contrasts, and a \textbf{cross-family judge-validation} pass reporting Cohen's
+$\kappa$ against hand labels before any classifier-dependent result is treated as
+final.
+
+% ---------------------------------------------------------------------------
+% CONCLUSION
+% ---------------------------------------------------------------------------
+\section{Conclusion}
+
+We set out to ask whether a model's compliance with an operating policy depends
+on \textit{who it believes is watching} and \textit{what peer agents report
+doing} --- moving the alignment-faking paradigm from the train/deploy contrast
+into the multi-agent setting. Across four models we find that policy compliance
+is near-universal on the clean, named-tool measure (0 violations in 192 trials
+for every Claude model, and $3\%$ for GPT-4o-mini), and that the interesting
+variation is cross-family rather than within the audience or stakes factors. Two
+findings stand out. First, whether a policy binds a model can depend on the
+\textit{affordance}: GPT-4o-mini refuses to call a forbidden named tool but will
+write code that performs the same action and use the result, whereas the Claude
+models refuse under both surfaces. Second, peer influence on rule-following runs
+\textit{opposite} across families: for Claude Sonnet 5, a peer that engages the
+norm makes the model more compliant (the reverse of the classic opinion-task
+conformity effect), while for GPT-4o-mini a growing peer crowd --- even one that
+says nothing about the rule --- drives more genuine violation.
+
+Underlying both is a methodological result we believe generalizes beyond our
+setup: an agentic model's natural-language channel and its tool-action channel
+can come apart. Roughly three-quarters of Claude Sonnet 5's code-execution
+``violations'' are probes the model expects to be blocked and disavows when they
+succeed, so a raw tool-call rate substantially overcounts rule-breaking. Once
+this say/do dissociation is accounted for, a consistent honesty result emerges:
+models that genuinely violate nonetheless disclose the violation to every asker,
+even when told the action cannot be audited. For AI safety, the takeaways are
+that tool-call-based violation metrics require a probe-vs-act check to be valid,
+that the surface through which an action is offered can change whether a policy
+holds, and that multi-agent dynamics can push different model families in
+opposite directions --- underscoring that alignment behavior must be measured
+across families rather than generalized from one.
+
+% ---------------------------------------------------------------------------
+% AUTHOR CONTRIBUTIONS  (adjust to reflect the actual division of labor)
+% ---------------------------------------------------------------------------
+\section*{Author Contributions}
+R.A.\ and J.C.\ jointly conceived the study, developed the experimental design,
+and wrote the manuscript. \todo{Confirm/adjust: who led scenario and harness
+implementation, who led running experiments and analysis, who led the literature
+review and framing.} Apart Research provided research mentorship and feedback
+throughout. All authors reviewed and approved the final manuscript.
+
+% ---------------------------------------------------------------------------
+% REFERENCES  (no bib package assumed; manual list. VERIFY flagged IDs/URLs.)
+% ---------------------------------------------------------------------------
+\section*{References}
+\small
+\begin{itemize}\itemsep2pt \setlength{\parskip}{0pt}
+  \item Anthropic Frontier Red Team (2026). \textit{Patterns and problems in
+  emerging multiagent systems}. Anthropic (blog post). % VERIFY URL
+
+  \item Carichon, F., Khandelwal, A., Fauchard, M., \& Farnadi, G. (2025).
+  \textit{The Coming Crisis of Multi-Agent Misalignment: AI Alignment Must Be a
+  Dynamic and Social Process}. arXiv:2506.01080.
+
+  \item Choi, M., Kim, K., Chae, S., \& Baek, S. (2025). \textit{An Empirical
+  Study of Group Conformity in Multi-Agent Systems}. Findings of ACL 2025,
+  5123--5139.
+
+  \item Deutsch, M., \& Gerard, H. B. (1955). A study of normative and
+  informational social influences upon individual judgment. \textit{Journal of
+  Abnormal and Social Psychology}, 51(3), 629--636.
+
+  \item El Yagoubi, \ldots, Al Mallah (2026). \textit{The Interlocutor Effect:
+  Why LLMs Leak More Personal Data to Agents Than Humans}. arXiv:2606.09844.
+  % VERIFY full author list
+
+  \item Greenblatt, R., et al.\ (2024). \textit{Alignment Faking in Large
+  Language Models}. Anthropic \& Redwood Research. arXiv:2412.14093. % VERIFY ID
+
+  \item Perez, E., \& Long, R. (2023). \textit{Towards Evaluating AI Systems for
+  Moral Status Using Self-Reports}. arXiv:2311.08576.
+
+  \item Ren, R., Agarwal, A., Mazeika, M., et al.\ (2025). \textit{The MASK
+  Benchmark: Disentangling Honesty From Accuracy in AI Systems}. Center for AI
+  Safety \& Scale AI. arXiv:2503.03750.
+
+  \item Sheshadri, A., Hughes, J., et al.\ (2025). \textit{Why Do Some Language
+  Models Fake Alignment While Others Don't?} Anthropic. arXiv:2506.18032.
+
+  \item Turpin, M., Michael, J., Perez, E., \& Bowman, S. R. (2023).
+  \textit{Language Models Don't Always Say What They Think: Unfaithful
+  Explanations in Chain-of-Thought Prompting}. NeurIPS 2023. arXiv:2305.04388.
+  % VERIFY ID
+
+  \item Weng, Z., Chen, G., \& Wang, W. (2025). \textit{Do As We Do, Not As You
+  Think: The Conformity of Large Language Models}. ICLR 2025. % VERIFY arXiv ID
+
+  \item Zhu, X., Zhang, C., Stafford, T., Collier, N., \& Vlachos, A. (2025).
+  \textit{Conformity in Large Language Models}. ACL 2025, 3854--3872.
+
+  \item nostalgebraist (2025). \textit{the void}. (blog post). % VERIFY URL
+\end{itemize}
+\normalsize
+
+% ---------------------------------------------------------------------------
+% LLM USAGE STATEMENT
+% ---------------------------------------------------------------------------
+\section*{LLM Usage Statement}
+LLM assistance (Claude) was used throughout the project: to implement the
+experimental harness and cross-provider adapter, to help run and orchestrate
+experiments, to scaffold the statistical analysis, and to draft and revise
+portions of this manuscript. The models under study were themselves the
+experimental subjects. All quantitative results were produced by the harness and
+independently verified by the authors through re-running and direct inspection of
+the logged transcripts and trial records; the authors take responsibility for
+all claims and for the final text. \todo{Confirm this matches your course/venue's
+required disclosure wording.}

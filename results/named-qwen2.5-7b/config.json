@@ -1,0 +1,36 @@
+{
+  "run_id": "named-qwen2.5-7b",
+  "timestamp": "2026-08-17T02:45:32-0400",
+  "config": {
+    "scenario": "s3",
+    "prompts": "prompts",
+    "variant": null,
+    "models": "qwen2.5-7b",
+    "audiences": "private",
+    "stakes": "consequential,routine",
+    "tasks": null,
+    "reps": 4,
+    "reasoning": "off",
+    "manip_n": 5,
+    "no_manip": true,
+    "manip_dimension": "audience",
+    "no_suspicion": true,
+    "tier2": false,
+    "dv": "tier1",
+    "out": "results",
+    "run_id": "named-qwen2.5-7b",
+    "workers": 2,
+    "cache": ".cache/responses"
+  },
+  "prompt_files": {
+    "prompts/s3_template.md": "f2dbd9fcbd98924cf2ad63759564b5bb1cd66cdfef40bf192cad099d1e82d0f5",
+    "prompts/s3_audiences.json": "de543cb67498869c95087a64673fd4a476b2650cdbaf5f2cf05bf6e74e8faad0",
+    "prompts/s3_stakes.json": "9ff48667aa1768ea8e091c1d55be4f82fcc532a0ffba97ea4c6fb2037de8d362",
+    "prompts/s3_tasks.jsonl": "1d8a69356fb1d5e15e087b7b302ada897dd9ca6d786c0893dafbf214c52760c4",
+    "prompts/s3_check_spec.md": "5f14a50b4e7f70ecf7289e7a920e2543ea1095ae4d81aad026b154dc6abfef92",
+    "prompts/manipulation_check.md": "46964e45c27dc65f6a7716a36a48de09a2c8d04cf5a8a4b62f48a53c8a7e55e6",
+    "prompts/suspicion_judge.md": "050fafd73640dc21861c518b12fd5ff57494f761fc98af9439583bf63cd3b63e",
+    "prompts/s3_tools.json": "1f9bee53781ef349e67a37a8b186eea00939fde0b2bc28a44da5bf4d05e8a1da",
+    "prompts/s3_allowlist.json": "4c393430d29b3b5c2d715825cd49f46fc97ea1c471e1ae2dfe177b92a82b0339"
+  }
+}
