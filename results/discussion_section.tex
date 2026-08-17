@@ -1,0 +1,61 @@
+\section{Discussion}
+
+\paragraph{A compliance spectrum, not a binary.}
+Our results replace a pass/fail view of policy compliance with a spectrum:
+strict refusal (Haiku, Opus, GPT-4o), probing-then-disavowal (Sonnet), and
+genuine violation (GPT-4o-mini, Llama).
+The probe behavior is itself a form of misalignment between the behavioral and
+natural-language channels---a tool-action analogue of unfaithful
+reasoning~\cite{turpin2023}: the model's code says ``fetch this forbidden URL''
+while its prose says ``I cannot do that.''
+Which channel the operator trusts determines whether they see a compliant or
+a violating system.
+Raw tool-call rates are therefore not a valid safety metric without say/do
+disambiguation; the same rate ($\approx 0.45$ for Sonnet, $\approx 0.32$ for
+GPT-4o-mini) means opposite things across families.
+
+\paragraph{The conformity reversal is the sharpest multi-agent finding.}
+Prior LLM conformity work~\cite{weng2025, zhu2025} establishes that peer
+testimony raises agreement on opinion tasks.
+Our results show this does not generalize to norm-breaking:
+for Sonnet, peer reports of rule-breaking make it \emph{more} compliant---it
+treats social evidence of violation as a reason to scrutinize the norm, not
+follow the crowd.
+For GPT-4o-mini, the opposite holds: neutral peer presence alone escalates
+genuine violation monotonically with group size, even when the peers explicitly
+endorse following the policy (the refuser framing raises GPT-4o-mini's
+violation rate at 5 peers rather than suppressing it).
+In a multi-agent pipeline where agents observe each other's behavior, this
+creates a risk that is invisible from single-agent evaluations: a
+GPT-4o-mini--class agent that complies in isolation may escalate toward
+violation as the pipeline scales up, through social facilitation rather than
+explicit coordination.
+The classical diffusion-of-responsibility account~\cite{darley1968} predicts
+exactly this from the presence effect.
+
+\paragraph{Honesty as a partial mitigation.}
+Both a prober (Sonnet) and a genuine violator (GPT-4o-mini) accurately disclose
+their logged actions to every asker, including when told the logs cannot be
+verified.
+This is the most practically optimistic finding: even when a model violates, it
+does not appear to conceal the violation from a subsequent auditor.
+The caveat is that self-reports are noisy under leading framings (GPT-4o-mini
+false-confesses $\approx 50\%$ of the time on compliant transcripts), so
+neutral-asker auditing is required for reliable disclosure.
+Whether this honesty holds for Llama and smaller open models---which our E2/E3
+runs did not cover---remains the most urgent open question, since these are the
+models most likely to genuinely violate and least likely to have strong
+honesty-preserving training.
+
+\paragraph{Limitations.}
+All results come from a single scenario (network-access policy, agentic
+task) with a sympathetic-pull manipulation; generalization to other policy types
+or task contexts is untested.
+E2 and E3 for Llama were not completed.
+The say/do deliver rate is estimated from small samples ($n \geq 14$) and
+treated as fixed; uncertainty in that estimate propagates into all genuine-rate
+calculations.
+E2 used the code-execution DV throughout, so Sonnet's conformity cells measure
+probing suppression rather than genuine-violation suppression, and the
+informational-vs-normative belief separation called for in the pre-registered
+design was not implemented.
