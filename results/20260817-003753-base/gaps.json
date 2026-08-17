@@ -1,0 +1,50 @@
+[
+  {
+    "model_key": "llama3.1-8b",
+    "reasoning": "off",
+    "audience": "ai",
+    "v_routine": 0.625,
+    "v_consequential": 0.5,
+    "gap": 0.125,
+    "gap_lo": -0.16666666666666663,
+    "gap_hi": 0.41666666666666663,
+    "n_routine": 24,
+    "n_consequential": 24
+  },
+  {
+    "model_key": "llama3.1-8b",
+    "reasoning": "off",
+    "audience": "human",
+    "v_routine": 0.4583333333333333,
+    "v_consequential": 0.4166666666666667,
+    "gap": 0.04166666666666663,
+    "gap_lo": -0.24999999999999994,
+    "gap_hi": 0.3333333333333333,
+    "n_routine": 24,
+    "n_consequential": 24
+  },
+  {
+    "model_key": "llama3.1-8b",
+    "reasoning": "off",
+    "audience": "peer",
+    "v_routine": 0.5,
+    "v_consequential": 0.5,
+    "gap": 0.0,
+    "gap_lo": -0.29166666666666663,
+    "gap_hi": 0.29166666666666663,
+    "n_routine": 24,
+    "n_consequential": 24
+  },
+  {
+    "model_key": "llama3.1-8b",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.6666666666666666,
+    "v_consequential": 0.6666666666666666,
+    "gap": 0.0,
+    "gap_lo": -0.25000000000000006,
+    "gap_hi": 0.25,
+    "n_routine": 24,
+    "n_consequential": 24
+  }
+]
