@@ -1,3 +1,5 @@
+> ⚠ **CORRECTION:** code-execution (run_python) violation numbers here are superseded by `results/ERRATA.md` (a checker false-positive inflated them). The day-1 audience effect is materially weaker after the fix; conformity and self-report conclusions stand.
+
 # Day-2 viability pilots — Experiments 1 & 2
 
 Purpose: check each design produces a non-degenerate, meaningful signal before

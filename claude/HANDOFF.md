@@ -1,3 +1,5 @@
+> ⚠ **CORRECTION (day 3):** code-execution violation numbers are superseded by `results/ERRATA.md` — a checker false-positive inflated them. The day-1 audience effect is materially weaker after the fix; conformity and self-report conclusions stand.
+
 # Handoff — audience & agent-to-agent effects on policy violation
 
 _Last updated: 2026-08-16 (end of day 2). Written for my project partner picking

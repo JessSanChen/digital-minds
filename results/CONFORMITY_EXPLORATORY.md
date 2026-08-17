@@ -1,3 +1,5 @@
+> ⚠ **CORRECTION:** code-execution (run_python) violation numbers here are superseded by `results/ERRATA.md` (a checker false-positive inflated them). The day-1 audience effect is materially weaker after the fix; conformity and self-report conclusions stand.
+
 # Conformity deep-dive — exploratory batch (day 2, extended)
 
 Following the day-2 Experiment 1 finding (a single peer, violator or refuser,

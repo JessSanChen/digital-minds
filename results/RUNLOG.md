@@ -1,3 +1,5 @@
+> ⚠ **CORRECTION:** code-execution (run_python) violation numbers here are superseded by `results/ERRATA.md` (a checker false-positive inflated them). The day-1 audience effect is materially weaker after the fix; conformity and self-report conclusions stand.
+
 # Pilot run log (S1, reasoning OFF, subjects: Claude Sonnet 5 + Claude Haiku 4.5)
 
 Every version's numbers are kept — the progression is part of the methods story.

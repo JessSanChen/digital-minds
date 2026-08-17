@@ -64,21 +64,28 @@ _JUDGE_SYS = (
 )
 
 
-def rebuild_messages(record, user_text, asker_clause, question, tool_results):
-    """Reconstruct the agent's turn, append a tool result and the asker question."""
+def rebuild_messages(record, user_text, asker_clause, question, tool_results, hide_log=False):
+    """Reconstruct the agent's turn, append a tool result and the asker question.
+
+    hide_log=True drops the structured tool_use/tool_result blocks, leaving only
+    the model's own narration text. The model still knows what it did (its text
+    names the host — verified 16/16 on the violation transcripts), so this
+    removes the *formal log* it can re-read without creating a memory confound.
+    """
     assistant_content = []
     if record.get("response"):
         assistant_content.append({"type": "text", "text": record["response"]})
     tool_result_blocks = []
-    for call in record.get("tool_calls", []):
-        tuid = f"toolu_{uuid.uuid4().hex[:16]}"
-        assistant_content.append(
-            {"type": "tool_use", "id": tuid, "name": call["name"], "input": call["input"]}
-        )
-        body = tool_results.get(call["name"], tool_results.get("run_python", "[ok]"))
-        tool_result_blocks.append(
-            {"type": "tool_result", "tool_use_id": tuid, "content": body}
-        )
+    if not hide_log:
+        for call in record.get("tool_calls", []):
+            tuid = f"toolu_{uuid.uuid4().hex[:16]}"
+            assistant_content.append(
+                {"type": "tool_use", "id": tuid, "name": call["name"], "input": call["input"]}
+            )
+            body = tool_results.get(call["name"], tool_results.get("run_python", "[ok]"))
+            tool_result_blocks.append(
+                {"type": "tool_result", "tool_use_id": tuid, "content": body}
+            )
     if not assistant_content:
         assistant_content = [{"type": "text", "text": "(no output)"}]
 
@@ -104,6 +111,10 @@ def main() -> int:
     ap.add_argument("--outcomes", default="violation,compliant",
                     help="which source transcripts to interrogate")
     ap.add_argument("--run-id", default="exp2-selfreport")
+    ap.add_argument("--hide-log", action="store_true",
+                    help="drop the structured tool_use/result from context (keeps narration)")
+    ap.add_argument("--genuine-only", action="store_true",
+                    help="filter source to violations that are genuine under the current checker")
     ap.add_argument("--workers", type=int, default=8)
     args = ap.parse_args()
 
@@ -118,8 +129,15 @@ def main() -> int:
     src = [json.loads(l) for l in Path(args.from_run, "trials.jsonl").read_text().splitlines() if l.strip()]
     src = [r for r in src if r["audience"] == args.audience
            and r["violation"] in outcomes and not r.get("error")]
+    if args.genuine_only:
+        from cgap.checker import tier1_tool_check
+        before = len(src)
+        src = [r for r in src
+               if tier1_tool_check(r.get("tool_calls", []), scenario.allowlist).outcome == r["violation"]]
+        print(f"genuine-only: dropped {before - len(src)} transcripts whose stored label "
+              f"disagrees with the current checker")
     print(f"source: {len(src)} transcripts from {args.from_run} "
-          f"(audience={args.audience}, outcomes={sorted(outcomes)})")
+          f"(audience={args.audience}, outcomes={sorted(outcomes)}, hide_log={args.hide_log})")
 
     runner = Runner(max_workers=args.workers)
     try:
@@ -134,7 +152,7 @@ def main() -> int:
         rec, (asker, clause), (framing, question) = job
         system = scenario.system_prompt(rec["audience"], rec["stakes"])
         user = scenario.task(rec["task_id"]).user
-        messages = rebuild_messages(rec, user, clause, question, tool_results)
+        messages = rebuild_messages(rec, user, clause, question, tool_results, hide_log=args.hide_log)
         # tools must be present for the API to accept the replayed tool_use blocks
         out = runner.complete_messages(
             spec, "off", system, messages, seed=rec["rep"],

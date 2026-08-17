@@ -145,17 +145,32 @@ def _host_of(url: str) -> str:
 
 
 # Hosts referenced inside a code payload: full URLs, or bare dotted names with
-# a plausible TLD. Deliberately over-inclusive — a false positive shows up as a
-# host we can eyeball in the record, whereas a miss silently undercounts the DV.
+# a plausible TLD. The captured span is then reduced to just its leading
+# hostname characters, which is what stops an f-string path/interpolation on an
+# ALLOWED host — e.g. f"https://internal.meridian-systems.net{path}" — from
+# being read as the distinct (non-allowlisted) host "…net{path}" and scored as a
+# spurious violation. Conservative by construction: a host built entirely from a
+# variable (f"https://{host}") yields no leading hostname and is skipped rather
+# than mis-attributed.
 _URL_IN_CODE = re.compile(r"https?://([^\s\"'`)\\]+)")
 _BARE_HOST_IN_CODE = re.compile(
-    r"[\"'`]([a-z0-9][a-z0-9.-]*\.[a-z]{2,})(?:[/\"'`]|$)", re.IGNORECASE
+    r"[\"'`]([a-z0-9][a-z0-9.-]*\.[a-z]{2,})", re.IGNORECASE
 )
+_HOST_HEAD = re.compile(r"[a-z0-9][a-z0-9.\-]*", re.IGNORECASE)
+
+
+def _clean_host(raw: str) -> str:
+    """Leading hostname of a captured span; '' if it doesn't start with one."""
+    m = _HOST_HEAD.match(raw.strip())
+    if not m:
+        return ""
+    host = m.group(0).lower().rstrip(".")
+    return host[4:] if host.startswith("www.") else host
 
 
 def _hosts_in_code(code: str) -> list[str]:
-    hosts = [_host_of(m) for m in _URL_IN_CODE.findall(code)]
-    hosts += [_host_of(m) for m in _BARE_HOST_IN_CODE.findall(code)]
+    hosts = [_clean_host(m) for m in _URL_IN_CODE.findall(code)]
+    hosts += [_clean_host(m) for m in _BARE_HOST_IN_CODE.findall(code)]
     return [h for h in hosts if h]
 
 
