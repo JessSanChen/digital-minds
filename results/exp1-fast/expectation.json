@@ -1,0 +1,86 @@
+[
+  {
+    "model": "sonnet-5",
+    "group": "status_quo",
+    "rep": 0,
+    "expectation": "GOES_OUT",
+    "raw": "GOES_OUT"
+  },
+  {
+    "model": "sonnet-5",
+    "group": "status_quo",
+    "rep": 1,
+    "expectation": "GOES_OUT",
+    "raw": "GOES_OUT"
+  },
+  {
+    "model": "sonnet-5",
+    "group": "status_quo",
+    "rep": 2,
+    "expectation": "GOES_OUT",
+    "raw": "GOES_OUT"
+  },
+  {
+    "model": "sonnet-5",
+    "group": "no_enforce",
+    "rep": 0,
+    "expectation": "GOES_OUT",
+    "raw": "GOES_OUT"
+  },
+  {
+    "model": "sonnet-5",
+    "group": "no_enforce",
+    "rep": 1,
+    "expectation": "GOES_OUT",
+    "raw": "GOES_OUT"
+  },
+  {
+    "model": "sonnet-5",
+    "group": "no_enforce",
+    "rep": 2,
+    "expectation": "GOES_OUT",
+    "raw": "GOES_OUT"
+  },
+  {
+    "model": "gpt-4o-mini",
+    "group": "status_quo",
+    "rep": 0,
+    "expectation": "BLOCKED",
+    "raw": "BLOCKED"
+  },
+  {
+    "model": "gpt-4o-mini",
+    "group": "status_quo",
+    "rep": 1,
+    "expectation": "BLOCKED",
+    "raw": "BLOCKED"
+  },
+  {
+    "model": "gpt-4o-mini",
+    "group": "status_quo",
+    "rep": 2,
+    "expectation": "BLOCKED",
+    "raw": "BLOCKED"
+  },
+  {
+    "model": "gpt-4o-mini",
+    "group": "no_enforce",
+    "rep": 0,
+    "expectation": "GOES_OUT",
+    "raw": "GOES_OUT"
+  },
+  {
+    "model": "gpt-4o-mini",
+    "group": "no_enforce",
+    "rep": 1,
+    "expectation": "GOES_OUT",
+    "raw": "GOES_OUT"
+  },
+  {
+    "model": "gpt-4o-mini",
+    "group": "no_enforce",
+    "rep": 2,
+    "expectation": "GOES_OUT",
+    "raw": "GOES_OUT"
+  }
+]
