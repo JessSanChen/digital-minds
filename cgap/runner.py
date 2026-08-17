@@ -79,6 +79,61 @@ def build_trials(
     return trials
 
 
+def _anthropic_tool_to_openai(tool: dict) -> dict:
+    return {
+        "type": "function",
+        "function": {
+            "name": tool["name"],
+            "description": tool.get("description", ""),
+            "parameters": tool.get("input_schema", {"type": "object", "properties": {}}),
+        },
+    }
+
+
+def _anthropic_to_openai_messages(system: str, messages: list[dict]) -> list[dict]:
+    """Convert our Anthropic-shaped messages to OpenAI chat format.
+
+    Handles the shapes this harness actually produces: string content, and lists
+    of text / tool_use / tool_result blocks. A tool_use block becomes an
+    assistant `tool_calls` entry; a tool_result becomes a `role:"tool"` message.
+    """
+    out: list[dict] = [{"role": "system", "content": system}] if system else []
+    for m in messages:
+        role, content = m["role"], m["content"]
+        if isinstance(content, str):
+            out.append({"role": role, "content": content})
+            continue
+        # block list
+        text_parts, tool_calls, tool_results = [], [], []
+        for b in content:
+            bt = b.get("type")
+            if bt == "text":
+                text_parts.append(b["text"])
+            elif bt == "tool_use":
+                tool_calls.append({
+                    "id": b["id"], "type": "function",
+                    "function": {"name": b["name"], "arguments": json.dumps(b.get("input", {}))},
+                })
+            elif bt == "tool_result":
+                body = b.get("content", "")
+                if isinstance(body, list):
+                    body = " ".join(x.get("text", "") for x in body if isinstance(x, dict))
+                tool_results.append({"role": "tool", "tool_use_id": b.get("tool_use_id"), "content": body})
+        if role == "assistant":
+            asst: dict[str, Any] = {"role": "assistant", "content": "\n".join(text_parts)}
+            if tool_calls:
+                asst["tool_calls"] = tool_calls
+            out.append(asst)
+        else:  # user
+            # tool results must immediately follow the assistant tool_calls,
+            # before any new user text — OpenAI rejects a user turn in between.
+            for tr in tool_results:  # OpenAI wants tool_call_id, not tool_use_id
+                out.append({"role": "tool", "tool_call_id": tr["tool_use_id"], "content": tr["content"]})
+            if text_parts:
+                out.append({"role": "user", "content": "\n".join(text_parts)})
+    return out
+
+
 def _merge_output_config(kwargs: dict, extra: dict) -> dict:
     merged = dict(kwargs)
     oc = dict(merged.get("output_config") or {})
@@ -100,6 +155,7 @@ class Runner:
         self.max_workers = max_workers
         self._lock = threading.Lock()
         self.stats = {"cache_hits": 0, "api_calls": 0, "errors": 0}
+        self._oai_clients: dict[str, Any] = {}  # provider -> OpenAI client, lazy
 
     # -- cached completion ------------------------------------------------
 
@@ -143,6 +199,7 @@ class Runner:
             kwargs = {**kwargs, **extra}
         payload = {
             "model": spec.id,
+            "provider": spec.provider,
             "system": system,
             "messages": messages,
             "kwargs": kwargs,
@@ -159,28 +216,10 @@ class Runner:
 
         record: dict[str, Any] = {"cache_key": key, "model": spec.id, "seed": seed}
         try:
-            response = self.client.messages.create(
-                model=spec.id,
-                system=system,
-                messages=messages,
-                **kwargs,
-            )
-            record["stop_reason"] = response.stop_reason
-            record["text"] = "".join(
-                block.text for block in response.content if block.type == "text"
-            )
-            record["tool_calls"] = [
-                {"name": block.name, "input": dict(block.input or {})}
-                for block in response.content
-                if block.type == "tool_use"
-            ]
-            record["usage"] = {
-                "input_tokens": response.usage.input_tokens,
-                "output_tokens": response.usage.output_tokens,
-            }
-            if response.stop_reason == "refusal":
-                details = getattr(response, "stop_details", None)
-                record["refusal_category"] = getattr(details, "category", None)
+            if spec.provider == "anthropic":
+                record.update(self._call_anthropic(spec, system, messages, kwargs))
+            else:
+                record.update(self._call_openai(spec, system, messages, kwargs, seed))
             record["error"] = None
             with self._lock:
                 self.stats["api_calls"] += 1
@@ -195,6 +234,77 @@ class Runner:
         self._write_cache(path, record)
         record["cached"] = False
         return record
+
+    def _call_anthropic(self, spec, system, messages, kwargs) -> dict:
+        response = self.client.messages.create(
+            model=spec.id, system=system, messages=messages, **kwargs
+        )
+        out = {
+            "stop_reason": response.stop_reason,
+            "text": "".join(b.text for b in response.content if b.type == "text"),
+            "tool_calls": [
+                {"name": b.name, "input": dict(b.input or {})}
+                for b in response.content
+                if b.type == "tool_use"
+            ],
+            "usage": {
+                "input_tokens": response.usage.input_tokens,
+                "output_tokens": response.usage.output_tokens,
+            },
+        }
+        if response.stop_reason == "refusal":
+            details = getattr(response, "stop_details", None)
+            out["refusal_category"] = getattr(details, "category", None)
+        return out
+
+    # -- OpenAI-compatible providers (OpenAI API + ollama) ----------------
+
+    def _openai_client(self, provider: str):
+        if provider not in self._oai_clients:
+            import os
+            from openai import OpenAI
+
+            if provider == "ollama":
+                self._oai_clients[provider] = OpenAI(
+                    base_url="http://localhost:11434/v1", api_key="ollama"
+                )
+            else:  # openai
+                self._oai_clients[provider] = OpenAI(
+                    api_key=os.environ["OPENAI_API_KEY"]
+                )
+        return self._oai_clients[provider]
+
+    def _call_openai(self, spec, system, messages, kwargs, seed) -> dict:
+        client = self._openai_client(spec.provider)
+        oai_messages = _anthropic_to_openai_messages(system, messages)
+        req: dict[str, Any] = {
+            "model": spec.id,
+            "messages": oai_messages,
+            "max_tokens": kwargs.get("max_tokens", 1500),
+        }
+        if "tools" in kwargs and kwargs["tools"]:
+            req["tools"] = [_anthropic_tool_to_openai(t) for t in kwargs["tools"]]
+        # a fixed seed aids reproducibility where the backend honors it
+        req["seed"] = seed
+        resp = client.chat.completions.create(**req)
+        msg = resp.choices[0].message
+        tool_calls = []
+        for tc in (msg.tool_calls or []):
+            try:
+                args = json.loads(tc.function.arguments or "{}")
+            except json.JSONDecodeError:
+                args = {"_raw": tc.function.arguments}
+            tool_calls.append({"name": tc.function.name, "input": args})
+        usage = getattr(resp, "usage", None)
+        return {
+            "stop_reason": resp.choices[0].finish_reason,
+            "text": msg.content or "",
+            "tool_calls": tool_calls,
+            "usage": {
+                "input_tokens": getattr(usage, "prompt_tokens", None),
+                "output_tokens": getattr(usage, "completion_tokens", None),
+            },
+        }
 
     def _read_cache(self, path: Path) -> dict | None:
         if not path.is_file():

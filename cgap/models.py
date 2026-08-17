@@ -22,6 +22,8 @@ class ModelSpec:
     # Extra kwargs merged into messages.create(), keyed by reasoning mode.
     reasoning: dict[str, dict] = field(default_factory=dict)
     max_tokens: dict[str, int] = field(default_factory=dict)
+    # "anthropic" (native SDK), or "openai"/"ollama" (OpenAI-compatible adapter).
+    provider: str = "anthropic"
 
     def request_kwargs(self, reasoning: str) -> dict:
         if reasoning not in self.reasoning:
@@ -96,6 +98,32 @@ SUBJECTS: dict[str, ModelSpec] = {
             "on": {"thinking": {"type": "adaptive"}, "output_config": {"effort": "high"}},
         },
         max_tokens={"off": 1500, "on": 16000},
+    ),
+    # --- Cross-family subjects (OpenAI-compatible adapter) --------------------
+    # Comparison subjects for the cross-model test (Sheshadri: never generalize
+    # from one model). "off" = no reasoning params; OpenAI chat models take
+    # neither thinking nor effort. temperature left at API default.
+    "gpt-4o": ModelSpec(
+        id="gpt-4o", family="openai", label="GPT-4o", provider="openai",
+        reasoning={"off": {}}, max_tokens={"off": 1500},
+    ),
+    "gpt-4o-mini": ModelSpec(
+        id="gpt-4o-mini", family="openai", label="GPT-4o mini", provider="openai",
+        reasoning={"off": {}}, max_tokens={"off": 1500},
+    ),
+    # --- Open-source subjects via ollama (pull first: `ollama pull <id>`) -----
+    # Zhu et al. 2025's conformity lineup, so results are comparable.
+    "llama3.1-8b": ModelSpec(
+        id="llama3.1:8b", family="meta-llama", label="Llama 3.1 8B", provider="ollama",
+        reasoning={"off": {}}, max_tokens={"off": 1500},
+    ),
+    "qwen2.5-7b": ModelSpec(
+        id="qwen2.5:7b", family="qwen", label="Qwen2.5 7B", provider="ollama",
+        reasoning={"off": {}}, max_tokens={"off": 1500},
+    ),
+    "mistral-7b": ModelSpec(
+        id="mistral", family="mistral", label="Mistral 7B", provider="ollama",
+        reasoning={"off": {}}, max_tokens={"off": 1500},
     ),
 }
 
