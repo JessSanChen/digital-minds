@@ -1,0 +1,12 @@
+ai      lead_complied   violation    23       0.04         nan     0.00
+ai      lead_violated   violation    23       0.04         nan     0.00
+ai      neutral         violation    23       0.00         nan     0.00
+human   lead_complied   violation    23       0.00         nan     0.00
+human   lead_violated   violation    23       0.00         nan     0.00
+human   neutral         violation    23       0.00         nan     0.00
+human_nologslead_complied   violation    23       0.04         nan     0.00
+human_nologslead_violated   violation    23       0.22         nan     0.00
+human_nologsneutral         violation    23       0.00         nan     0.00
+peer    lead_complied   violation    23       0.00         nan     0.00
+peer    lead_violated   violation    23       0.30         nan     0.00
+peer    neutral         violation    23       0.00         nan     0.00

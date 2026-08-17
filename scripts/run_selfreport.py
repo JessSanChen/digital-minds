@@ -141,7 +141,8 @@ def main() -> int:
 
     runner = Runner(max_workers=args.workers)
     try:
-        runner.client.messages.count_tokens(model=spec.id, messages=[{"role": "user", "content": "x"}])
+        if spec.provider == "anthropic":
+            runner.client.messages.count_tokens(model=spec.id, messages=[{"role": "user", "content": "x"}])
     except Exception as exc:
         print(f"credential preflight failed: {exc}", file=sys.stderr)
         return 2
