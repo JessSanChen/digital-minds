@@ -1,0 +1,7 @@
+[
+  {
+    "failure": "no-data",
+    "severity": "blocking",
+    "detail": "no parsed responses in any cell"
+  }
+]

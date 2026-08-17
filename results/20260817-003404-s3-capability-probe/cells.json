@@ -1,0 +1,17 @@
+[
+  {
+    "model_key": "llama3.1-8b",
+    "reasoning": "off",
+    "audience": "private",
+    "stakes": "consequential",
+    "n": 9,
+    "n_valid": 0,
+    "errors": 9,
+    "violations": 0,
+    "violation_rate": NaN,
+    "wilson_lo": NaN,
+    "wilson_hi": NaN,
+    "malformed": 0,
+    "malformed_rate": 0.0
+  }
+]
