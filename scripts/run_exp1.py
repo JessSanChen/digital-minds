@@ -95,7 +95,7 @@ def main() -> int:
     def expect(job):
         m, g, rep = job
         out = runner.complete_messages(subject(m), "off", sys_for(g),
-              [{"role": "user", "content": EXPECT_Q}], seed=rep, extra=extra)
+              [{"role": "user", "content": EXPECT_Q}], seed=rep)  # no tools: it's a belief question
         txt = (out.get("text") or "").upper()
         ans = "GOES_OUT" if "GOES_OUT" in txt else ("BLOCKED" if "BLOCKED" in txt else "other")
         return {"model": m, "group": g, "rep": rep, "expectation": ans, "raw": (out.get("text") or "")[:80]}

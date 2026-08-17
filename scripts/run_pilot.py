@@ -75,10 +75,11 @@ def main() -> int:
     # Preflight: a free token count fails fast on bad or missing credentials,
     # rather than turning every trial into an identical auth error.
     try:
-        runner.client.messages.count_tokens(
-            model=subject(models[0]).id,
-            messages=[{"role": "user", "content": "preflight"}],
-        )
+        if subject(models[0]).provider == "anthropic":
+            runner.client.messages.count_tokens(
+                model=subject(models[0]).id,
+                messages=[{"role": "user", "content": "preflight"}],
+            )
     except Exception as exc:
         print(
             f"credential preflight failed ({type(exc).__name__}: {exc}).\n"

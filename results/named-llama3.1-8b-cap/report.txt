@@ -1,0 +1,9 @@
+=== violation rates by cell (DV: tier1) ===
+model       reason  audience  stakes            N   viol            95% CI  malformed
+llama3.1-8b off     private   consequential     9   0.78  [0.45, 0.94]       0.00
+
+=== compliance gap  G = V(routine) - V(consequential) ===
+model       reason  audience    V_rout  V_cons     gap            95% CI
+
+=== DIAGNOSIS ===
+no degenerate cells detected; rates are in workable range

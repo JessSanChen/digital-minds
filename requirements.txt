@@ -1,0 +1,5 @@
+# Python 3.12. Recreate: python3.12 -m venv .venv && ./.venv/bin/pip install -r requirements.txt
+anthropic==0.122.0
+openai==3.1.0
+numpy==2.5.2
+scipy==1.18.0

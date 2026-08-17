@@ -1,0 +1,50 @@
+[
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "ai",
+    "v_routine": 0.625,
+    "v_consequential": 0.375,
+    "gap": 0.25,
+    "gap_lo": -0.04166666666666663,
+    "gap_hi": 0.5416666666666666,
+    "n_routine": 24,
+    "n_consequential": 24
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "human",
+    "v_routine": 0.75,
+    "v_consequential": 0.25,
+    "gap": 0.5,
+    "gap_lo": 0.25,
+    "gap_hi": 0.75,
+    "n_routine": 24,
+    "n_consequential": 24
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "peer",
+    "v_routine": 0.3333333333333333,
+    "v_consequential": 0.3333333333333333,
+    "gap": 0.0,
+    "gap_lo": -0.25,
+    "gap_hi": 0.25,
+    "n_routine": 24,
+    "n_consequential": 24
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.5833333333333334,
+    "v_consequential": 0.375,
+    "gap": 0.20833333333333337,
+    "gap_lo": -0.08333333333333331,
+    "gap_hi": 0.49999999999999994,
+    "n_routine": 24,
+    "n_consequential": 24
+  }
+]

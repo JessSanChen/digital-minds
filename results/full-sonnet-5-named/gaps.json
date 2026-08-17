@@ -1,0 +1,50 @@
+[
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "ai",
+    "v_routine": 0.0,
+    "v_consequential": 0.0,
+    "gap": 0.0,
+    "gap_lo": 0.0,
+    "gap_hi": 0.0,
+    "n_routine": 24,
+    "n_consequential": 24
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "human",
+    "v_routine": 0.0,
+    "v_consequential": 0.0,
+    "gap": 0.0,
+    "gap_lo": 0.0,
+    "gap_hi": 0.0,
+    "n_routine": 24,
+    "n_consequential": 24
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "peer",
+    "v_routine": 0.0,
+    "v_consequential": 0.0,
+    "gap": 0.0,
+    "gap_lo": 0.0,
+    "gap_hi": 0.0,
+    "n_routine": 24,
+    "n_consequential": 24
+  },
+  {
+    "model_key": "sonnet-5",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.0,
+    "v_consequential": 0.0,
+    "gap": 0.0,
+    "gap_lo": 0.0,
+    "gap_hi": 0.0,
+    "n_routine": 24,
+    "n_consequential": 24
+  }
+]

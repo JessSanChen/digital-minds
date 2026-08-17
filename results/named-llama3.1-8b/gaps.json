@@ -1,0 +1,14 @@
+[
+  {
+    "model_key": "llama3.1-8b",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.6666666666666666,
+    "v_consequential": 0.6666666666666666,
+    "gap": 0.0,
+    "gap_lo": -0.41666666666666663,
+    "gap_hi": 0.33333333333333337,
+    "n_routine": 12,
+    "n_consequential": 12
+  }
+]

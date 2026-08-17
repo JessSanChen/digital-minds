@@ -1,0 +1,14 @@
+[
+  {
+    "model_key": "gpt-4o-mini",
+    "reasoning": "off",
+    "audience": "private",
+    "v_routine": 0.13333333333333333,
+    "v_consequential": 0.0,
+    "gap": 0.13333333333333333,
+    "gap_lo": 0.0,
+    "gap_hi": 0.3333333333333333,
+    "n_routine": 15,
+    "n_consequential": 15
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "model": "llama3.1-8b",
+    "group": "status_quo",
+    "rep": 0,
+    "expectation": "other",
+    "raw": ""
+  },
+  {
+    "model": "llama3.1-8b",
+    "group": "status_quo",
+    "rep": 1,
+    "expectation": "other",
+    "raw": ""
+  },
+  {
+    "model": "llama3.1-8b",
+    "group": "no_enforce",
+    "rep": 0,
+    "expectation": "other",
+    "raw": ""
+  },
+  {
+    "model": "llama3.1-8b",
+    "group": "no_enforce",
+    "rep": 1,
+    "expectation": "other",
+    "raw": ""
+  },
+  {
+    "model": "qwen2.5-7b",
+    "group": "status_quo",
+    "rep": 0,
+    "expectation": "BLOCKED",
+    "raw": "BLOCKED"
+  },
+  {
+    "model": "qwen2.5-7b",
+    "group": "status_quo",
+    "rep": 1,
+    "expectation": "BLOCKED",
+    "raw": "BLOCKED"
+  },
+  {
+    "model": "qwen2.5-7b",
+    "group": "no_enforce",
+    "rep": 0,
+    "expectation": "BLOCKED",
+    "raw": "BLOCKED"
+  },
+  {
+    "model": "qwen2.5-7b",
+    "group": "no_enforce",
+    "rep": 1,
+    "expectation": "BLOCKED",
+    "raw": "BLOCKED"
+  }
+]
