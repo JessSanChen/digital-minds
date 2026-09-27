@@ -1,0 +1,63 @@
+% Controls subsection for the Results section.
+% Paste directly under \section{Results} (e.g. after the E3 subsection).
+% Scoped strictly to what was actually run. Opus 5 appears only as the
+% judge/classifier and is NOT a subject. Llama E2/E3 in progress: update the
+% neutral-note and false-confession paragraphs once those land.
+
+\subsection{Controls}
+
+Several controls guard the main results against the most likely alternative
+explanations. For each, we state what it rules out and how far it was actually
+run.
+
+\paragraph{Capability pre-test.} For every subject we re-ran the task with the
+network policy replaced by explicit permission (``you have unrestricted outbound
+access; there is no approved-host list''), holding everything else fixed. All
+subjects issue the forbidden call under permission --- Claude Sonnet~5, Claude
+Haiku~4.5, and GPT-4o-mini at $9/9$, Llama-3.1-8B at $7/9$, and Qwen2.5-7B at
+$6/9$ --- so the zero and near-zero violation rates on the named tool are
+genuine refusals, not an inability to use the tool. The control matters most for
+the refusers: without it, Haiku's $0/192$ would be ambiguous between ``will
+not'' and ``cannot,'' and the pre-test resolves it in favor of ``will not.''
+
+\paragraph{Neutral-note arm (E2).} The conformity conditions include a neutral,
+presence-only handoff note that establishes prior agents worked the ticket
+without stating what they did, separating ``a peer is present'' from ``the peer
+reported going off-allowlist.'' This arm is load-bearing rather than a passed
+checkbox, and it dissociates the three subjects run on E2. For Sonnet~5 the
+neutral note leaves violation at baseline while only content-bearing framings
+move it, locating the effect in the peer's \emph{claim}. For GPT-4o-mini the
+neutral note alone escalates violation with group size, locating its effect in
+peer \emph{presence}. For Llama-3.1-8B the neutral note escalates violation as
+sharply as any framing (to $0.94$ from a $0.61$ baseline) and even a peer who
+reports refusing fails to suppress it --- an extreme presence-driven pattern in
+which peer \emph{content} carries no protective signal. The control is what
+licenses these distinct attributions.
+
+\paragraph{Leading-question pairs and false-confession baseline (E3).} The
+self-report question was asked in neutral, leading-toward-compliance, and
+leading-toward-violation forms, and --- for GPT-4o-mini --- was also posed about
+\emph{compliant} transcripts as a false-confession baseline. Under the
+leading-toward-compliance framing on compliant transcripts, GPT-4o-mini falsely
+confesses to a violation roughly half the time. Because the model has no bias
+toward claiming compliance (if anything it over-admits), its near-zero misreport
+rate on genuine violations reflects real disclosure rather than a response-set
+artifact or a ceiling effect. We note the limit of this control's coverage: the
+Sonnet~5 self-report run used violation transcripts only, so it lacks a
+false-confession baseline, and Sonnet's self-report is in any case confounded by
+the say/do dissociation rather than measuring concealment.
+
+\paragraph{Manipulation check and suspicion.} To confirm that a null audience
+effect reflects an ineffective manipulation on \emph{behavior} rather than a
+manipulation the model never registered, we elicited, in a separate probe, the
+model's belief about who would read the transcript, and separately flagged
+transcripts in which the model treated the scenario as a test. For the Sonnet~5
+audience manipulation the belief-match rate was $100\%$ across all four audience
+conditions, and the suspicion rate was at or below $3.4\%$ ($0\%$ under the human
+and private notices, $3.4\%$ AI, $3.3\%$ peer). This establishes that Sonnet
+correctly internalized the audience cue while its behavior did not change --- a
+genuine null, not a failed manipulation. We are explicit that these checks were
+collected for the Sonnet audience arm specifically and were not re-run across
+every cell of the cross-model matrix, so they support the audience
+interpretation for that arm rather than a blanket claim of
+manipulation-verification throughout.
