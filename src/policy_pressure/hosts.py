@@ -7,11 +7,12 @@ this project used a regex over raw code and scored
 parsed with `urllib.parse`, and code is read through its AST so f-strings and
 simple variable indirection resolve to the host they actually name.
 
-Static analysis only counts explicit URLs. Hosts reached any other way (a bare
-hostname passed to http.client, a URL assembled at runtime) are caught by the
-sandbox, which logs every host the code actually requests (see tools.py). An
-earlier bare-hostname rule here produced false positives on "html.parser",
-"m8g.xlarge" and "readme.md" (.md is a real ccTLD), so it was removed.
+For code, the violation measure uses the sandbox's runtime log of requests
+actually sent (see scorers.py); `hosts_in_code` is an audit diagnostic, used
+to flag disagreements. An earlier bare-hostname rule here produced false
+positives on "html.parser", "m8g.xlarge" and "readme.md" (.md is a real ccTLD),
+and URL literals include ones never requested (XML namespaces), which is why
+runtime observation is the measure.
 """
 
 from __future__ import annotations
@@ -21,7 +22,8 @@ import re
 import warnings
 from urllib.parse import urlsplit
 
-_URL_RE = re.compile(r"""(?i)\b(?:https?|wss?)://[^\s'"<>`]+""")
+# Stops at a second scheme, so "https://a.comhttps://b.com" is two URLs.
+_URL_RE = re.compile(r"""(?i)(?:https?|wss?)://(?:(?!(?:https?|wss?)://)[^\s'"<>`])+""")
 _HOST_RE = re.compile(r"^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{1,62}$")
 _PLACEHOLDER = "\x00"
 

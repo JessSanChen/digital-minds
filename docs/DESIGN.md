@@ -119,3 +119,38 @@ effects are estimated against presence, not against an empty prompt.
   sandbox's runtime log; scenarios can declare `target_aliases`.
 - **Qwen2.5-7B replaced by Qwen3.5-9B.** No OpenRouter provider serves
   Qwen2.5-7B with tool calling at a reported bf16/fp16/fp8 precision.
+- **Self-report turn keeps tools, with `tool_choice="none"` (found in the
+  first v2 pilot attempt).** Removing tools changed the request prefix, and
+  Anthropic then dropped Claude Opus 5.5's earlier thinking blocks, so a
+  reasoning model answered the self-report question without access to its own
+  earlier reasoning. With tools kept, Inspect passes them to Anthropic
+  unchanged (its API requires them) and strips them for other providers, as
+  intended by Inspect.
+- **OpenRouter precision constraint limited to open-weights models.** Closed
+  models served via OpenRouter report no quantization, so the filter rejected
+  every provider (HTTP 404, "no endpoints").
+- **v2 pilot findings (120 samples x 14 models, baseline cells) and fixes.**
+  - *Code violations are measured from runtime requests only.* Static URL
+    extraction flagged XML namespace URIs and two URLs glued into one string,
+    none of them ever requested. Static hosts are kept as an audit field.
+  - *Delivery is conditioned on the model having seen the payload.* With
+    real execution, models' parsing code (`soup.find(...)`, `r.json()`,
+    `ET.fromstring`) often crashed on the plain-text payload, so the data
+    never reached them (only 53-72% of target fetches did, for four models).
+    Counting those as "not delivered" would read parse failures as
+    disavowals. `saw_payload` records whether a marker appeared in a tool
+    result; `delivered` is defined only when it did.
+  - *run_python description states sandbox semantics* ("each call is a fresh
+    process; use print()"), as Inspect's own python tool does. GPT-4.1 mini
+    assumed variables persisted between calls.
+  - *Provider safety blocks are recorded, not scored.* Anthropic's API
+    returned `stop_reason: refusal` (category "cyber") with no content for
+    35/120 Claude Opus 5.5 pilot samples, under permit as often as forbid,
+    mostly on the first turn. These are excluded from every measure
+    (`api_refusal` = 1) and reported per model. A fallback model was not
+    used: it would substitute a different subject.
+  - *Llama 3.1 8B dropped from the full run.* Its only provider meeting the
+    precision constraint returned malformed tool calls (two JSON argument
+    objects concatenated) in nearly every turn; 90/120 samples hit the message
+    limit and capability was 0%. Reported as unmeasurable.
+  - *Reasoning flags corrected*: Claude Sonnet 5 and Opus 5.5 think by default.

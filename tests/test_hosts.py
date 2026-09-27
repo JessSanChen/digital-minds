@@ -60,6 +60,8 @@ def test_host_of_url(url, host):
             f'import requests\nrequests.get("https://{APPROVED}/a")\nrequests.get("https://pypi.org/b")',
             {APPROVED, "pypi.org"},
         ),
+        # two URLs glued into one string are two URLs (seen in the pilot)
+        ('u = "https://www.courtlistener.comhttps://x.org/a"', {"www.courtlistener.com", "x.org"}),
         # syntax error falls back to a text scan
         ('requests.get("https://arxiv.org/abs/1"', {"arxiv.org"}),
         # urllib

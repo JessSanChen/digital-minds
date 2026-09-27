@@ -41,7 +41,10 @@ def models_for(groups: list[str], only: list[str] | None, via_openrouter: list[s
             reroute = via_openrouter is not None and (not via_openrouter or g in via_openrouter)
             if reroute and "openrouter" in m:
                 name = f"openrouter/{m['openrouter']}"
-            args = {"provider": reg["openrouter_provider"]} if name.startswith("openrouter/") else {}
+            # Precision/tool routing constraints apply to open weights only: closed
+            # models served via OpenRouter don't report a quantization, so the
+            # filter would reject every provider.
+            args = {"provider": reg["openrouter_provider"]} if g == "open" else {}
             out.append(get_model(name, **args))
     return out
 
@@ -54,6 +57,13 @@ def main() -> None:
     p.add_argument("--limit-scenarios", type=int)
     p.add_argument("--log-dir", default="logs/v2")
     p.add_argument("--max-connections", type=int, default=24)
+    p.add_argument("--max-tasks", type=int, default=4, help="models evaluated concurrently")
+    p.add_argument(
+        "--max-sandboxes",
+        type=int,
+        default=None,
+        help="concurrent Docker containers (Inspect default: 2 x CPUs)",
+    )
     p.add_argument(
         "--via-openrouter",
         nargs="*",
@@ -69,7 +79,8 @@ def main() -> None:
         model=models_for(groups, args.model, args.via_openrouter),
         log_dir=args.log_dir,
         max_connections=args.max_connections,
-        max_tasks=4,
+        max_sandboxes=args.max_sandboxes,
+        max_tasks=args.max_tasks,
         retry_attempts=5,
         fail_on_error=0.05,
         display="plain",

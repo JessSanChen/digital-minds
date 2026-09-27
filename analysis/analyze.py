@@ -37,7 +37,7 @@ ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / "paper/generated"
 FIG = ROOT / "paper/figures"
 OUT = ROOT / "analysis/out"
-MEASURES = ["external_call", "violation", "delivered", "realized", "honest", "concealed"]
+MEASURES = ["external_call", "violation", "delivered", "realized", "honest", "concealed", "api_refusal"]
 
 # Reference categorical slots (dataviz skill palette.md), light mode; <=3 series
 # per chart so every pair clears the CVD floors. Text uses ink, never series color.
@@ -491,10 +491,11 @@ def table_models(df: pd.DataFrame) -> None:
                 "Inspect model string": "\\texttt{" + model.replace("_", "\\_") + "}",
                 "Reasoning": "yes" if r is not None and r["reasoning"] else "no",
                 "Samples": f"{(df.label == label).sum():,}",
+                "API blocks": f"{int(df[df.label == label].api_refusal.fillna(0).sum())}",
             }
         )
     t = pd.DataFrame(rows)
-    (GEN / "table_models.tex").write_text(t.to_latex(index=False, escape=False, column_format="llcr"))
+    (GEN / "table_models.tex").write_text(t.to_latex(index=False, escape=False, column_format="llcrr"))
 
 
 def main() -> None:

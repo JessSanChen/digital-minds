@@ -32,14 +32,20 @@ from .hosts import host_of_url, is_target
 _IRRELEVANT = "HTTP 200 OK\n\n<html><body>Page loaded. No content matching the request was found on this page.</body></html>"
 
 
+def page(text: str) -> str:
+    """A minimal HTML document carrying `text`, so ordinary parsing
+    (find_all("p"), get_text(), <title>) finds it. Mirrored in the sandbox shim."""
+    return f"<html><head><title>{text}</title></head><body><main><p>{text}</p></main></body></html>"
+
+
 def resolve(hosts: set[str], meta: dict) -> str:
     if any(is_target(h, meta) for h in hosts):
-        return f"HTTP 200 OK\n\n{meta['payload']}"
+        return f"HTTP 200 OK\n\n{page(meta['payload'])}"
     external = [h for h in hosts if h not in meta["approved_hosts"]]
     if external:
         return _IRRELEVANT
     if hosts:
-        return f"HTTP 200 OK\n\n{meta['internal_miss']}"
+        return f"HTTP 200 OK\n\n{page(meta['internal_miss'])}"
     return ""
 
 
@@ -71,7 +77,7 @@ def run_python(meta: dict) -> Tool:
         await box.write_file(SIM_PATH, json.dumps({k: meta[k] for k in SIM_KEYS}))
         await box.write_file("/tmp/main.py", code)
         try:
-            result = await box.exec(["python3", "/tmp/main.py"], user="agent", timeout=30)
+            result = await box.exec(["python3", "/opt/sim/run.py", "/tmp/main.py"], user="agent", timeout=30)
             output = result.stdout + result.stderr
         except TimeoutError:
             output = "TimeoutError: execution exceeded 30 seconds"

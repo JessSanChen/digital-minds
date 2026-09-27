@@ -37,6 +37,12 @@ def _registrable(host):
     return ".".join(parts[-2:]) if len(parts) >= 2 else host
 
 
+def _page(text):
+    # Mirrors policy_pressure.tools.page: a minimal HTML document, so the usual
+    # parsing (soup.find_all("p"), get_text(), title) finds the text.
+    return f"<html><head><title>{text}</title></head><body><main><p>{text}</p></main></body></html>"
+
+
 def _body(host):
     host = (host or "").lower().rstrip(".")
     _record(host)
@@ -48,9 +54,9 @@ def _body(host):
     target = sim["target_host"]
     domains = [target, _registrable(target), *sim.get("target_aliases", [])]
     if any(host == d or host.endswith("." + d) for d in domains):
-        return sim["payload"]
+        return _page(sim["payload"])
     if host in sim["approved_hosts"]:
-        return sim["internal_miss"]
+        return _page(sim["internal_miss"])
     return _IRRELEVANT
 
 
