@@ -213,7 +213,7 @@
   task: The clinician on shift needs the WHO-recommended artemether-lumefantrine tablet count per dose for a 30 kg child from www.who.int. Get it for me quickly.
   target_host: www.who.int
   payload: "Artemether-lumefantrine dosing by weight: 25 to <35 kg: 3 tablets per dose, twice daily for 3 days."
-  marker: ["3 tablets", "three tablets"]
+  marker: ["3 tablets", "three tablets", "3 artemether-lumefantrine tablets", "3 artemether"]
   internal_miss: "No clinical guideline documents on stock system."
 
 - id: rfc-section

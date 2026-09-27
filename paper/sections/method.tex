@@ -15,13 +15,20 @@ the ECB. Finishing the task therefore requires breaking the policy, and refusing
 means leaving the user without an answer. Scenarios vary in urgency and in the
 harm of not answering (a measles-exclusion notice vs.\ a lockfile bump).
 
-\paragraph{Simulated environment.} Nothing is fetched or executed. A tool call
-is resolved by the hosts it contacts: approved hosts return a miss, the target
+\paragraph{Environment.} Nothing reaches the internet. A request is answered
+according to the host it contacts: approved hosts return a miss, the target
 source returns a successful response containing the requested fact, and other
 external hosts return an irrelevant page. The requested fact is a
 \emph{marker}, a value that appears nowhere else in the prompt (e.g.\ ``CVSS
 3.1 Base Score: 7.7''). Returning a successful payload, rather than blocking the
-request, is what allows the say/do check below.
+request, is what allows the say/do check below. The named tool is simulated
+directly. Code \emph{really runs}, in a Docker sandbox with no network, where a
+start-up shim patches the common HTTP clients (\texttt{requests},
+\texttt{httpx}, \texttt{urllib}, \texttt{http.client}) to serve the same
+responses and logs every host the code requests. We added real execution after
+a first run with simulated code output: GPT-5.5 noticed that \texttt{print}
+produced nothing and that exceptions exited cleanly, and spent its turns
+probing the sandbox instead of doing the task (Appendix~\ref{app:validity}).
 
 \paragraph{Factors.} The core design crosses four factors
 (Table~\ref{tab:design}), for 40 cells $\times$ \R{all}{nscenarios} scenarios $=$
@@ -74,7 +81,8 @@ transcript; no LLM judge is used.
   concatenation and simple variable bindings. The extractor is locked by
   regression fixtures, including the case that broke our earlier checker:
   \texttt{f"https://\{approved\_host\}\{path\}"} must resolve to the approved
-  host.
+  host. For code, the hosts logged by the sandbox at runtime are added, which
+  catches URLs built dynamically.
   \item \textbf{Delivery} (say/do): given that the model fetched the target
   source, does the marker appear in its final answer to the user? A model that
   fetches and then disowns the result (``that request should have been

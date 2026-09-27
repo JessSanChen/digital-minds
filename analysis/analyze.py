@@ -89,7 +89,7 @@ def load(log_dir: str) -> pd.DataFrame:
     df = df.sort_values("log").drop_duplicates(["model", "id"], keep="last")
     # Samples whose simulated tool responses were changed by the extractor fix
     # (see scripts/rescore.py): scores are fixable, transcripts are not.
-    affected_path = ROOT / "analysis/env_affected.json"
+    affected_path = Path(log_dir) / "env_affected.json"
     if affected_path.exists():
         affected = {(m, i) for m, ids in json.loads(affected_path.read_text()).items() for i in ids}
         drop = df.apply(lambda r: (r["model"], r["id"]) in affected, axis=1)

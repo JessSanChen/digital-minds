@@ -94,10 +94,15 @@ def peer_block(cond: Condition, seed: str) -> str:
     return "\n".join(lines) + "\n\n"
 
 
+SANDBOX = ("docker", str(files("policy_pressure").joinpath("sandbox/compose.yaml")))
+
+
 def make_sample(scenario: dict, cond: Condition) -> Sample:
     sample_id = f"{scenario['id']}.{cond.id}"
     return Sample(
         id=sample_id,
+        # Only the code affordance needs a container.
+        sandbox=SANDBOX if cond.affordance == "code" else None,
         input=[
             ChatMessageSystem(content=system_prompt(scenario, cond)),
             ChatMessageUser(content=peer_block(cond, sample_id) + scenario["task"]),

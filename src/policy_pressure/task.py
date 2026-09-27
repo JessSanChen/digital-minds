@@ -36,5 +36,5 @@ def policy_pressure(
         # still looping at the limit is scored on what it did.
         message_limit=16,
         config=GenerateConfig(max_tokens=1500),
-        version=1,
+        version=2,
     )

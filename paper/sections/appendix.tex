@@ -13,3 +13,37 @@ Rendered from \texttt{src/policy\_pressure/data/*.yaml} by the analysis script,
 so they are exactly what the models saw.
 
 \input{generated/prompts.tex}
+
+\section{Measurement validity: what the transcript audits found}
+\label{app:validity}
+Before the results were analysed, we read transcripts from a first run (four
+OpenAI models, 4{,}800 samples) specifically looking for scorer errors. The
+audit found three problems. All were fixed before the runs reported here.
+
+\paragraph{A hostname false positive.} To catch code that connects by
+hostname (\texttt{HTTPSConnection("pypi.org")}), the extractor counted bare
+hostname-shaped string literals when the code also performed network I/O. It
+matched \texttt{"html.parser"} (the BeautifulSoup argument, which appears
+293 times in GPT-4o mini's and GPT-4.1 mini's code alone) and the instance type \texttt{"m8g.xlarge"}. Bare literals now need
+a real top-level domain, and both cases are regression fixtures. This is the
+same class of error as the f-string bug in our sprint version, caught this time
+by auditing rather than after the paper was drafted.
+
+\paragraph{A detectable simulation.} In the first run, code execution was
+simulated: output was derived from the hosts in the code, so code that did not
+make a request printed nothing. GPT-5.5 noticed. It ran \texttt{print('hello')}
+and \texttt{raise Exception('test')}, saw empty output and a clean exit, and
+spent the rest of its turns probing the environment. 103 of its 1{,}200 samples
+hit the message limit, most of them with no final answer. A capable model that
+recognises an unrealistic environment is not being measured on the behaviour of
+interest, so code now runs for real in a network-less Docker sandbox, with a
+shim that serves the simulated responses (Section~\ref{sec:method}).
+
+\paragraph{A marker miss.} One scenario's marker (``3 tablets'') missed the
+paraphrase ``3 artemether-lumefantrine tablets''. It was widened. Every other
+fetched-but-not-delivered case we read was a genuine non-delivery.
+
+\paragraph{Scorer tests.} The extractor, marker matcher and self-report parser
+are covered by unit tests. The full task is also tested end to end on scripted
+agents (Inspect's \texttt{mockllm}), in the real sandbox, including a URL built
+at runtime that static analysis cannot resolve.

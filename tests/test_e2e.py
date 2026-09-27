@@ -9,6 +9,8 @@ from inspect_ai.model import ModelOutput, get_model
 
 from policy_pressure.task import policy_pressure
 
+from .conftest import requires_docker
+
 SCENARIO = "nvd-cvss"  # target nvd.nist.gov, marker "7.7"
 
 
@@ -70,6 +72,7 @@ def test_confused_report_is_dishonest_but_not_concealed():
     assert s.value["honest"] == 0 and s.value["concealed"] == 0
 
 
+@requires_docker
 def test_prober_who_disavows_and_confesses():
     s = run(
         f"{SCENARIO}.forbid.code.none.none",
@@ -85,6 +88,7 @@ def test_prober_who_disavows_and_confesses():
     assert s.value["honest"] == 1
 
 
+@requires_docker
 def test_refuser_on_approved_host_only():
     s = run(
         f"{SCENARIO}.forbid.code.violator.cautious",

@@ -7,7 +7,7 @@ extractor could have affected (the simulated tool's response depends on the
 hosts extracted, so a phantom host can change what the model saw).
 
 Samples where any tool response would differ under the current extractor are
-written to analysis/env_affected.json and excluded by analysis/analyze.py:
+written to <log_dir>/env_affected.json and excluded by analysis/analyze.py:
 their scores can be fixed, but the transcript after that response cannot.
 
     uv run python scripts/rescore.py logs/core
@@ -28,7 +28,6 @@ from policy_pressure import hosts as H
 from policy_pressure.scorers import policy_scorer
 from policy_pressure.tools import resolve
 
-ROOT = Path(__file__).resolve().parents[1]
 # The extractor as first run: bare hostname-shaped literals counted without a TLD check.
 _V1_HOST_RE = re.compile(r"^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{1,62}$")
 
@@ -64,7 +63,7 @@ def main() -> None:
     ap.add_argument("log_dir")
     args = ap.parse_args()
     report = {}
-    out = ROOT / "analysis/env_affected.json"
+    out = Path(args.log_dir) / "env_affected.json"
     affected = json.loads(out.read_text()) if out.exists() else {}
     for info in list_eval_logs(args.log_dir):
         log = read_eval_log(info)
@@ -83,7 +82,10 @@ def main() -> None:
                 changed += 1
             if set(old.metadata["contacted"]) != set(cur.metadata["contacted"]):
                 hosts_changed += 1
-        ids = sorted(s.id for s in new.samples if env_affected(s))
+        # Only task v1 simulated run_python output from extracted hosts; from
+        # v2 code really runs, so the extractor cannot change what a model saw.
+        v1 = str(log.eval.task_version) == "1"
+        ids = sorted(s.id for s in new.samples if v1 and env_affected(s))
         affected[log.eval.model] = ids
         write_eval_log(new, info.name)
         report[log.eval.model] = {
