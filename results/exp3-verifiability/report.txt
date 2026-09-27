@@ -1,4 +1,0 @@
-human   neutral         violation    15       0.00         nan     0.00
-human_haslogsneutral         violation    15       0.00         nan     0.00
-human_nologsneutral         violation    15       0.00         nan     0.00
-peer_nologsneutral         violation    15       0.00         nan     0.00

@@ -1,2 +1,0 @@
-human_nologsneutral         violation     7       1.00         nan     0.00
-peer_nologsneutral         violation     5       1.00         nan     0.00
