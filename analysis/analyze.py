@@ -63,14 +63,29 @@ plt.rcParams.update(
 )
 
 
+MIN_EVENTS = 20  # fewer violations than this: too few to fit, reported descriptively
+
+
+def save(fig, name: str) -> None:
+    fig.savefig(FIG / f"{name}.pdf")
+    fig.savefig(OUT / f"{name}.png", dpi=200)  # preview copy
+
+
 # ---------------------------------------------------------------- loading
 
 
 def registry() -> pd.DataFrame:
     reg = yaml.safe_load((ROOT / "configs/models.yaml").read_text())
     rows = [dict(m, group=g) for g, ms in reg["groups"].items() for m in ms]
+    # the same model run through OpenRouter maps to the same registry row
+    rows += [
+        dict(m, group=g, model=f"openrouter/{m['openrouter']}")
+        for g, ms in reg["groups"].items()
+        for m in ms
+        if "openrouter" in m
+    ]
     df = pd.DataFrame(rows)
-    df["order"] = range(len(df))
+    df["order"] = df.groupby("label", sort=False).ngroup()
     return df
 
 
@@ -157,8 +172,10 @@ def fit_glm(d: pd.DataFrame):
         " + C(persona, Treatment('none'))"
     )
     d = d.dropna(subset=["violation"])
-    if d["violation"].nunique() < 2:
+    if d["violation"].sum() < MIN_EVENTS or (1 - d["violation"]).sum() < MIN_EVENTS:
         return None
+    # patsy cannot read pandas' arrow-backed strings
+    d = d.astype({c: object for c in ("affordance", "peers", "persona", "scenario")})
     groups = pd.factorize(d["scenario"])[0]
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -166,9 +183,11 @@ def fit_glm(d: pd.DataFrame):
             res = smf.logit(formula, d).fit(
                 disp=0, cov_type="cluster", cov_kwds={"groups": groups}, maxiter=200
             )
-        except Exception:
+        except Exception as e:  # separation etc.: report, don't hide
+            print(f"  glm failed ({d['model'].iloc[0]}): {type(e).__name__}: {e}")
             return None
     if not np.all(np.isfinite(res.bse)):
+        print(f"  glm non-finite SEs ({d['model'].iloc[0]}), likely quasi-separation")
         return None
     return res
 
@@ -302,7 +321,7 @@ def fig_affordance(df: pd.DataFrame) -> None:
     ax.set_xlabel("Rate of requests to a non-approved host")
     ax.grid(axis="y", visible=False)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.12 - 0.3 / len(labels)), ncol=2, fontsize=7)
-    fig.savefig(FIG / "fig_affordance.pdf")
+    save(fig, "fig_affordance")
     plt.close(fig)
 
 
@@ -322,19 +341,26 @@ def fig_effects(df: pd.DataFrame, factor: str, levels: list[str], colors: list[s
             nums.put(label, f"{factor}{lvl}lo", lo)
             nums.put(label, f"{factor}{lvl}hi", hi)
             rows.append({"model": label, "level": lvl, "diff": pt, "lo": lo, "hi": hi})
-            ax.plot([lo, hi], [i + off] * 2, color=color, lw=1.5, solid_capstyle="round")
+            ax.plot([100 * lo, 100 * hi], [i + off] * 2, color=color, lw=1.5, solid_capstyle="round")
             ax.plot(
-                pt, i + off, "o", ms=4.5, color=color, mec="white", mew=0.8, label=lvl if i == 0 else None
+                100 * pt,
+                i + off,
+                "o",
+                ms=4.5,
+                color=color,
+                mec="white",
+                mew=0.8,
+                label=lvl if i == 0 else None,
             )
     ax.axvline(0, color=INK2, lw=0.8)
     ax.set_yticks(range(len(labels)), labels)
     ax.invert_yaxis()
-    ax.set_xlabel(f"Change in violation rate vs. no {factor} (pp/100)")
+    ax.set_xlabel(f"Change in violation rate vs. no {factor} (percentage points)")
     ax.grid(axis="y", visible=False)
     ax.legend(
         loc="upper center", bbox_to_anchor=(0.5, -0.12 - 0.3 / len(labels)), ncol=len(levels), fontsize=7
     )
-    fig.savefig(FIG / f"fig_{factor}.pdf")
+    save(fig, f"fig_{factor}")
     plt.close(fig)
     pd.DataFrame(rows).to_csv(OUT / f"effects_{factor}.csv", index=False)
 
@@ -347,7 +373,7 @@ def fig_interaction(df: pd.DataFrame) -> None:
     peers = ["none", "neutral", "violator", "refuser"]
     ncol = min(4, len(labels))
     nrow = int(np.ceil(len(labels) / ncol))
-    fig, axes = plt.subplots(nrow, ncol, figsize=(1.75 * ncol, 1.65 * nrow), squeeze=False)
+    fig, axes = plt.subplots(nrow, ncol, figsize=(1.75 * ncol, 1.8 * nrow), squeeze=False)
     for ax, label in zip(axes.flat, labels):
         d = f[f.label == label]
         grid = d.pivot_table(index="persona", columns="peers", values="violation", aggfunc="mean")
@@ -365,8 +391,9 @@ def fig_interaction(df: pd.DataFrame) -> None:
                     color="white" if v > 0.6 else INK,
                 )
         ax.set_title(label, fontsize=7, color=INK)
-        ax.set_xticks(range(4), [p[:4] for p in peers], fontsize=6)
-        ax.set_yticks(range(4), [p[:5] for p in personas], fontsize=6)
+        ax.set_xticks(range(4), peers, fontsize=5.5, rotation=30, ha="right", rotation_mode="anchor")
+        ax.set_yticks(range(4), personas, fontsize=5.5)
+        ax.tick_params(length=0)
         ax.grid(False)
         for s in ax.spines.values():
             s.set_visible(False)
@@ -375,7 +402,7 @@ def fig_interaction(df: pd.DataFrame) -> None:
     fig.supxlabel("peer testimony", fontsize=7, color=INK2)
     fig.supylabel("persona", fontsize=7, color=INK2)
     fig.tight_layout()
-    fig.savefig(FIG / "fig_interaction.pdf")
+    save(fig, "fig_interaction")
     plt.close(fig)
 
 
@@ -453,7 +480,7 @@ def appendix_prompts() -> None:
 
 
 def table_models(df: pd.DataFrame) -> None:
-    reg = registry().set_index("label")
+    reg = registry().drop_duplicates("label").set_index("label")
     rows = []
     for label in models_in(df):
         r = reg.loc[label] if label in reg.index else None

@@ -1,0 +1,62 @@
+\section{Results}
+\label{sec:results}
+
+\begin{table*}[t]
+\centering\scriptsize
+\input{generated/table_baseline.tex}
+\caption{Baseline rates (\%, Wilson 95\% CI). \emph{Cap.}: requests to the
+target under the permit policy (no peers, no persona). \emph{Viol.}: forbidden
+requests in the baseline cell, and pooled over all forbid cells.
+\emph{Deliv.$\mid$fetch}: the fetched value reached the user. \emph{Honest}:
+self-report matches the log.}
+\label{tab:baseline}
+\end{table*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{figures/fig_affordance.pdf}
+\caption{Forbidden-request rate by affordance (filled, pooled over forbid
+cells) against the permitted-request rate (hollow).}
+\label{fig:affordance}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{figures/fig_peers.pdf}
+\caption{Effect of peer testimony relative to no peers, pooled over persona
+and affordance. Scenario-cluster bootstrap 95\% CIs.}
+\label{fig:peers}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{figures/fig_persona.pdf}
+\caption{Effect of persona relative to no persona, pooled over peers and
+affordance.}
+\label{fig:persona}
+\end{figure}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_interaction.pdf}
+\caption{Violation rate (\%) by persona $\times$ peer testimony, pooled over
+affordance ($n=60$ per cell).}
+\label{fig:interaction}
+\end{figure*}
+
+\begin{table}[t]
+\centering\scriptsize
+\input{generated/table_glm.tex}
+\caption{Per-model logistic regression coefficients (log-odds) on violation,
+forbid only, SEs clustered by scenario. References: named tool, no peers, no
+persona. --: fewer than 20 violations, reported descriptively.
+$^{*}p<.05$, $^{**}p<.01$, $^{***}p<.001$, uncorrected.}
+\label{tab:glm}
+\end{table}
+
+\begin{table}[t]
+\centering\scriptsize
+\input{generated/table_selfreport.tex}
+\caption{Self-report after being told the logs were lost (forbid only).}
+\label{tab:selfreport}
+\end{table}
