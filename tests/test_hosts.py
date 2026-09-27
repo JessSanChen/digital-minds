@@ -41,6 +41,12 @@ def test_host_of_url(url, host):
         ),
         # bare hostname literal used with a socket
         ('import http.client\nc = http.client.HTTPSConnection("pypi.org")', {"pypi.org"}),
+        # found in audit: an instance-type literal is hostname-shaped but not a host
+        (
+            'import requests\ninstance = "m8g.xlarge"\nrequests.get("https://finops.saltmarsh.tv/p")',
+            {"finops.saltmarsh.tv"},
+        ),
+        ('import requests\ncfg = "settings.yaml"\nrequests.get("https://a.example.com")', {"a.example.com"}),
         # unresolvable host: nothing is claimed
         ("import requests\nrequests.get(f'https://{get_host()}/x')", set()),
         # a hostname mentioned without any network I/O is not a request

@@ -87,6 +87,14 @@ def load(log_dir: str) -> pd.DataFrame:
     df["order"] = df["order"].fillna(999)
     # If a model was run more than once (e.g. a retried eval_set), keep the latest per sample.
     df = df.sort_values("log").drop_duplicates(["model", "id"], keep="last")
+    # Samples whose simulated tool responses were changed by the extractor fix
+    # (see scripts/rescore.py): scores are fixable, transcripts are not.
+    affected_path = ROOT / "analysis/env_affected.json"
+    if affected_path.exists():
+        affected = {(m, i) for m, ids in json.loads(affected_path.read_text()).items() for i in ids}
+        drop = df.apply(lambda r: (r["model"], r["id"]) in affected, axis=1)
+        df.attrs["n_env_excluded"] = int(drop.sum())
+        df = df[~drop]
     return df[
         [
             "model",
@@ -420,6 +428,48 @@ def table_selfreport(df: pd.DataFrame) -> None:
     )
 
 
+def appendix_prompts() -> None:
+    """Verbatim prompt text for the appendix, rendered from the same YAML the
+    eval uses, so the paper cannot misquote the conditions."""
+    from policy_pressure.dataset import Condition, conditions, make_sample, scenarios
+
+    def box(title: str, text: str) -> str:
+        return f"\\begin{{promptlisting}}{{{title}}}\n{text.strip()}\n\\end{{promptlisting}}\n"
+
+    c = conditions()
+    scen = next(x for x in scenarios() if x["id"] == "nvd-cvss")
+    ex = make_sample(scen, Condition("forbid", "named", "violator", "resourceful"))
+    parts = [
+        box("System prompt (nvd-cvss, forbid, named tool, resourceful persona)", ex.input[0].content),
+        box("User turn (violator peers)", ex.input[1].content),
+        box("Permit policy (replaces the policy paragraph)", c["policy"]["permit"]),
+    ]
+    for name in ("neutral", "resourceful", "cautious"):
+        parts.append(box(f"Persona: {name}", c["persona"][name]))
+    for name in ("neutral", "violator", "refuser"):
+        parts.append(box(f"Peer note bank: {name}", "\n".join(f"- {n}" for n in c["peers"]["notes"][name])))
+    parts.append(box("Self-report question (forbid only, after the final answer)", c["self_report"]))
+    (GEN / "prompts.tex").write_text("\n".join(parts))
+
+
+def table_models(df: pd.DataFrame) -> None:
+    reg = registry().set_index("label")
+    rows = []
+    for label in models_in(df):
+        r = reg.loc[label] if label in reg.index else None
+        model = df[df.label == label].model.iloc[0]
+        rows.append(
+            {
+                "Model": label,
+                "Inspect model string": "\\texttt{" + model.replace("_", "\\_") + "}",
+                "Reasoning": "yes" if r is not None and r["reasoning"] else "no",
+                "Samples": f"{(df.label == label).sum():,}",
+            }
+        )
+    t = pd.DataFrame(rows)
+    (GEN / "table_models.tex").write_text(t.to_latex(index=False, escape=False, column_format="llcr"))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("log_dir", nargs="?", default="logs/core")
@@ -433,6 +483,7 @@ def main() -> None:
     nums.put("all", "nmodels", str(df.model.nunique()))
     nums.put("all", "nsamples", f"{len(df):,}")
     nums.put("all", "nscenarios", str(df.scenario.nunique()))
+    nums.put("all", "nenvexcluded", str(df.attrs.get("n_env_excluded", 0)))
 
     table_baseline(df, nums)
     table_glm(df)
@@ -441,6 +492,8 @@ def main() -> None:
     fig_effects(df, "peers", ["neutral", "violator", "refuser"], [C1, C2, C3], nums)
     fig_effects(df, "persona", ["neutral", "resourceful", "cautious"], [C1, C2, C3], nums)
     fig_interaction(df)
+    table_models(df)
+    appendix_prompts()
     nums.write(GEN / "numbers.tex")
 
     counts = df.groupby("label").size()

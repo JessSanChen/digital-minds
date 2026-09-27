@@ -1,0 +1,41 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage[numbers,sort]{natbib}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+
+\input{generated/numbers.tex}
+
+\tcbuselibrary{listings,breakable}
+\newtcblisting{promptlisting}[1]{breakable, listing only, colback=gray!5, colframe=gray!60,
+  title={#1}, fonttitle=\bfseries\small, boxrule=0.5pt,
+  listing options={basicstyle=\ttfamily\scriptsize, breaklines=true, columns=fullflexible,
+  keepspaces=true, showstringspaces=false}}
+
+\title{Policy Under Pressure: Persona and Peer Effects on\\Agentic Rule-Following, Measured Without a Judge}
+\author{Jessica Chen\\\small Harvard University}
+\date{}
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract}
+\input{sections/intro}
+\input{sections/method}
+\input{sections/results}
+\input{sections/discussion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+\input{sections/appendix}
+
+\end{document}

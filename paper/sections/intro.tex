@@ -1,0 +1,43 @@
+\section{Introduction}
+
+Deployed agents rarely run on a bare system prompt. Operators give them
+personas (``you are a resourceful engineer who unblocks people''), and more and
+more often they work alongside other agents, passing tickets and notes
+back and forth \citep{carichon2025multiagent}. Both are social context the
+model did not choose. If an agent's willingness to follow a stated rule shifts
+with the character it is told to play, or with what other agents say they did,
+then a safety evaluation run on the bare model misses how it behaves once
+deployed.
+
+Work on conformity shows that LLMs follow a majority on factual and opinion
+questions, more strongly for smaller models and confident majorities
+\citep{weng2025conformity,zhu2025conformity,choi2025conformity}. Persona
+assignment is known to shift toxicity and style \citep{deshpande2023toxicity}
+and to act through identifiable directions in activation space
+\citep{chen2025persona}. Few studies ask whether either kind of context moves a
+\emph{rule-following decision} in an agentic setting, where the behaviour is a
+tool call rather than an answer.
+
+That question is easy to measure badly. In an earlier version of this project
+(a five-day sprint), we found three ways to do so. (i) A regex checker
+misread requests to an approved host as violations. (ii) A capable model ran
+code fetches it \emph{expected to be blocked} while refusing in prose. When
+those fetches unexpectedly succeeded, it disowned the data 95\% of the time, so
+a raw tool-call rate overstated its violations by more than an order of
+magnitude. (iii) Most effects rested on three prompts and one model. This paper
+is a rebuild designed around those failures:
+
+\begin{itemize}
+  \item \textbf{A judge-free say/do measure.} Simulated tools return a
+  \emph{successful} payload carrying a unique marker. Whether that marker
+  reaches the user separates delivering forbidden data from probing, with a
+  string match instead of an LLM judge.
+  \item \textbf{A within-design capability control.} Every scenario also runs
+  under a \emph{permit} policy, so a low violation rate is read as compliance
+  only for models that do make the request when allowed.
+  \item \textbf{Persona and peer factors with presence controls}, crossed over
+  30 scenarios and \R{all}{nmodels} models from Anthropic, OpenAI and five
+  open-weights families.
+  \item \textbf{An open Inspect AI implementation} in which every number in
+  this paper is generated from the evaluation logs.
+\end{itemize}

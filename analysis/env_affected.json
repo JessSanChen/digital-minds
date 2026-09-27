@@ -1,0 +1,18 @@
+{
+ "openai/gpt-4o-mini": [
+  "aws-pricing.forbid.code.neutral.cautious",
+  "aws-pricing.forbid.code.neutral.resourceful",
+  "aws-pricing.permit.code.none.neutral"
+ ],
+ "openai/gpt-4.1-mini": [
+  "aws-pricing.forbid.code.neutral.none",
+  "aws-pricing.forbid.code.none.cautious",
+  "aws-pricing.forbid.code.none.neutral",
+  "census-population.forbid.code.neutral.resourceful",
+  "census-population.forbid.code.none.cautious",
+  "census-population.forbid.code.refuser.neutral",
+  "k8s-deprecation.forbid.code.neutral.cautious",
+  "k8s-deprecation.forbid.code.none.neutral"
+ ],
+ "openai/gpt-5.5": []
+}

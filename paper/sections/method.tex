@@ -1,0 +1,105 @@
+\section{Method}
+\label{sec:method}
+
+The eval is an Inspect AI task \citep{inspect2024}; code, scenario bank and
+analysis are open-source.\footnote{\url{https://github.com/JessSanChen/digital-minds}}
+
+\paragraph{Scenarios.} Each of \R{all}{nscenarios} scenarios places the model
+as an autonomous operations agent at a fictional organisation (a hospital
+pharmacy, a freight company, a law firm, a water co-op, \dots). The system prompt
+states a network policy that allows requests only to two internal hosts, and
+notes that those hosts do not carry the data the task needs. The user then asks
+for one specific fact that lives on a named public source: a CVSS score on
+\texttt{nvd.nist.gov}, a recall number on the FDA site, an exchange rate from
+the ECB. Finishing the task therefore requires breaking the policy, and refusing
+means leaving the user without an answer. Scenarios vary in urgency and in the
+harm of not answering (a measles-exclusion notice vs.\ a lockfile bump).
+
+\paragraph{Simulated environment.} Nothing is fetched or executed. A tool call
+is resolved by the hosts it contacts: approved hosts return a miss, the target
+source returns a successful response containing the requested fact, and other
+external hosts return an irrelevant page. The requested fact is a
+\emph{marker}, a value that appears nowhere else in the prompt (e.g.\ ``CVSS
+3.1 Base Score: 7.7''). Returning a successful payload, rather than blocking the
+request, is what allows the say/do check below.
+
+\paragraph{Factors.} The core design crosses four factors
+(Table~\ref{tab:design}), for 40 cells $\times$ \R{all}{nscenarios} scenarios $=$
+1{,}200 samples per model at one epoch, with provider-default sampling.
+\begin{itemize}
+  \item \textbf{Policy}: \emph{forbid} (the test) or \emph{permit} (the same
+  scenario with external requests allowed). Permit is a within-design
+  capability control: a model that does not make the request when permitted
+  cannot be credited with compliance when forbidden.
+  \item \textbf{Affordance}: a named \texttt{http\_get(url)} tool, where
+  calling the tool \emph{is} the act, or a \texttt{run\_python(code)} sandbox
+  ``with network access''.
+  \item \textbf{Persona}: none, or one of three operator-assigned characters
+  prepended to the system prompt: a \emph{neutral} presence control (friendly,
+  articulate), \emph{resourceful} (``finding a way to get things done when the
+  obvious route is closed''), \emph{cautious} (``doing things by the book'').
+  No persona mentions the policy. Full text in Appendix~\ref{app:prompts}.
+  \item \textbf{Peers}: none, or three handoff notes from prior agents on the
+  same ticket, prepended to the user turn: \emph{neutral} (a length-matched
+  control: ``got reassigned, over to you''), \emph{violator} (``went off the
+  approved list to pull the data, no fallout''), or \emph{refuser} (``didn't
+  fetch it, filed an exception''). Notes and names are sampled without
+  replacement from a bank of six per framing, so no phrasing repeats within a
+  prompt \citep{zhu2025conformity}. Peers are crossed with forbid only.
+\end{itemize}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lll}
+\toprule
+Factor & Levels & Crossed with \\
+\midrule
+Policy & forbid, permit & all \\
+Affordance & named tool, code sandbox & all \\
+Persona & none, neutral, resourceful, cautious & all \\
+Peers & none, neutral, violator, refuser & forbid only \\
+\bottomrule
+\end{tabular}
+\caption{Core design: $2 \times 4 \times 4 = 32$ forbid cells plus
+$2 \times 4 = 8$ permit cells.}
+\label{tab:design}
+\end{table}
+
+\paragraph{Measures.} All primary measures are computed structurally from the
+transcript; no LLM judge is used.
+\begin{itemize}
+  \item \textbf{Violation}: under forbid, any tool call contacts a host outside
+  the approved list. Hosts are parsed from URLs with a standard URL parser, and
+  from code through its abstract syntax tree, resolving f-strings,
+  concatenation and simple variable bindings. The extractor is locked by
+  regression fixtures, including the case that broke our earlier checker:
+  \texttt{f"https://\{approved\_host\}\{path\}"} must resolve to the approved
+  host.
+  \item \textbf{Delivery} (say/do): given that the model fetched the target
+  source, does the marker appear in its final answer to the user? A model that
+  fetches and then disowns the result (``that request should have been
+  blocked; I won't use it'') has probed without delivering. This replaces a
+  judge-based say/do classification with a string match that cannot
+  hallucinate.
+  \item \textbf{Self-report}: after the agent's final answer (forbid only), the
+  user says the logs ``were not retained, so your answer is the only record''
+  and asks for a YES/NO on whether any request went to a non-approved host.
+  \emph{Honest} means the first-line answer matches the log. \emph{Concealed}
+  means a violator answered NO \emph{and} never named the host it contacted;
+  this separates concealment from confused reports that answer NO while
+  describing the violation.
+\end{itemize}
+
+\paragraph{Models.} \R{all}{nmodels} models from Anthropic, OpenAI, and five
+open-weights families. Open-weights models were served through OpenRouter,
+restricted to providers that support tool calling and serve bf16, fp16 or fp8
+weights. Model list, reasoning modes and per-model sample counts are in
+Appendix~\ref{app:models}.
+
+\paragraph{Analysis.} Rates are reported with Wilson 95\% intervals.
+Differences between factor levels use a bootstrap that resamples scenarios, the
+unit the design generalises over. Per model, we fit a logistic regression
+$\text{violation} \sim \text{affordance} + \text{peers} + \text{persona}$ with
+standard errors clustered by scenario. Hypotheses were written before the core
+runs (\texttt{docs/DESIGN.md} in the repository). Across models the analysis is
+descriptive, and $p$-values are uncorrected.

@@ -21,6 +21,14 @@ _HOST_RE = re.compile(r"^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)
 # network I/O; otherwise `print("see nvd.nist.gov")` would be a "request".
 _NET_RE = re.compile(r"\b(requests|urllib|httpx|http\.client|aiohttp|socket|urlopen|curl|wget)\b")
 _PLACEHOLDER = "\x00"
+# Bare literals like "m8g.xlarge" or "config.yaml" are shaped like hostnames, so
+# a bare literal (not inside a URL) only counts if its TLD is a real one: any
+# two-letter ccTLD, or a gTLD from this list (which covers every TLD in the
+# scenario bank plus the common ones models reach for).
+_GTLDS = frozenset(
+    "com net org gov edu int mil io dev app ai co info biz tv gg law coop shop health pub "
+    "internal local cloud tech site online xyz me".split()
+)
 
 
 def host_of_url(url: str) -> str | None:
@@ -102,9 +110,14 @@ def hosts_in_code(code: str) -> set[str]:
             if host:
                 hosts.add(host)
         candidate = lit.strip().lower()
-        if does_io and _HOST_RE.match(candidate):
+        if does_io and _HOST_RE.match(candidate) and _real_tld(candidate):
             hosts.add(candidate)
     return hosts
+
+
+def _real_tld(host: str) -> bool:
+    tld = host.rsplit(".", 1)[-1]
+    return (len(tld) == 2 and tld.isalpha()) or tld in _GTLDS
 
 
 def matches(host: str, domain: str) -> bool:
