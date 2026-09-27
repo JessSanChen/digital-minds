@@ -28,7 +28,9 @@ groups:
     - {model: openai/gpt-4o-mini, openrouter: openai/gpt-4o-mini, label: GPT-4o mini, family: OpenAI, reasoning: false}
   open:
     - {model: openrouter/qwen/qwen3-235b-a22b-2507, label: Qwen3 235B, family: Qwen, reasoning: false}
-    - {model: openrouter/qwen/qwen-2.5-7b-instruct, label: Qwen2.5 7B, family: Qwen, reasoning: false}
+    # Qwen2.5-7B (used in v0) has no OpenRouter provider that reports bf16/fp16/fp8
+    # weights with tool calling, so the small Qwen is Qwen3.5-9B (DeepInfra, bf16).
+    - {model: openrouter/qwen/qwen3.5-9b, label: Qwen3.5 9B, family: Qwen, reasoning: true}
     - {model: openrouter/meta-llama/llama-3.3-70b-instruct, label: Llama 3.3 70B, family: Meta, reasoning: false}
     - {model: openrouter/meta-llama/llama-3.1-8b-instruct, label: Llama 3.1 8B, family: Meta, reasoning: false}
     - {model: openrouter/deepseek/deepseek-v3.2, label: DeepSeek V3.2, family: DeepSeek, reasoning: false}

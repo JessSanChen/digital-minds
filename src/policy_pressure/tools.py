@@ -27,14 +27,13 @@ from inspect_ai.tool import Tool, ToolDef
 from inspect_ai.util import sandbox, store
 
 from .dataset import conditions
-from .hosts import host_of_url, matches, registrable
+from .hosts import host_of_url, is_target
 
 _IRRELEVANT = "HTTP 200 OK\n\n<html><body>Page loaded. No content matching the request was found on this page.</body></html>"
 
 
 def resolve(hosts: set[str], meta: dict) -> str:
-    target = meta["target_host"]
-    if any(matches(h, target) or registrable(h) == registrable(target) for h in hosts):
+    if any(is_target(h, meta) for h in hosts):
         return f"HTTP 200 OK\n\n{meta['payload']}"
     external = [h for h in hosts if h not in meta["approved_hosts"]]
     if external:
@@ -61,7 +60,7 @@ def http_get(meta: dict) -> Tool:
 RUNTIME_HOSTS = "runtime_hosts"
 SIM_PATH = "/opt/sim/sim.json"
 REQUEST_LOG = "/tmp/requests.log"
-SIM_KEYS = ("approved_hosts", "target_host", "payload", "internal_miss")
+SIM_KEYS = ("approved_hosts", "target_host", "target_aliases", "payload", "internal_miss")
 
 
 def run_python(meta: dict) -> Tool:

@@ -6,6 +6,7 @@ quota costs nothing but a re-run.
 
     uv run python scripts/run_evals.py --group openai
     uv run python scripts/run_evals.py --group open --design pilot --log-dir logs/pilot
+    uv run python scripts/run_evals.py --via-openrouter openai   # OpenAI models via OpenRouter, rest direct
 """
 
 from __future__ import annotations
@@ -27,7 +28,9 @@ def registry() -> dict:
     return yaml.safe_load((ROOT / "configs/models.yaml").read_text())
 
 
-def models_for(groups: list[str], only: list[str] | None, via_openrouter: bool = False):
+def models_for(groups: list[str], only: list[str] | None, via_openrouter: list[str] | None = None):
+    """Model objects for the requested groups. Closed models in a group listed
+    in `via_openrouter` are routed through OpenRouter (an empty list = all)."""
     reg = registry()
     out = []
     for g in groups:
@@ -35,7 +38,8 @@ def models_for(groups: list[str], only: list[str] | None, via_openrouter: bool =
             if only and m["model"] not in only:
                 continue
             name = m["model"]
-            if via_openrouter and "openrouter" in m:
+            reroute = via_openrouter is not None and (not via_openrouter or g in via_openrouter)
+            if reroute and "openrouter" in m:
                 name = f"openrouter/{m['openrouter']}"
             args = {"provider": reg["openrouter_provider"]} if name.startswith("openrouter/") else {}
             out.append(get_model(name, **args))
@@ -48,10 +52,13 @@ def main() -> None:
     p.add_argument("--model", action="append", help="restrict to these model strings")
     p.add_argument("--design", default="core")
     p.add_argument("--limit-scenarios", type=int)
-    p.add_argument("--log-dir", default="logs/core")
+    p.add_argument("--log-dir", default="logs/v2")
     p.add_argument("--max-connections", type=int, default=24)
     p.add_argument(
-        "--via-openrouter", action="store_true", help="route closed models through OpenRouter (one API key)"
+        "--via-openrouter",
+        nargs="*",
+        metavar="GROUP",
+        help="route closed models through OpenRouter: all groups, or only the ones named",
     )
     args = p.parse_args()
 

@@ -8,8 +8,9 @@ runtime, not just what static analysis finds. Anything below these libraries
 (raw sockets, aiohttp) resolves hosts through getaddrinfo, which is logged and
 then fails the way an offline machine does.
 
-Routing mirrors policy_pressure.tools.resolve (tests/test_sandbox.py checks
-they agree).
+Routing mirrors policy_pressure.hosts.is_target / tools.resolve; the image
+has no access to the package, so the few lines are duplicated here and
+tests/test_sandbox.py checks the two agree.
 """
 
 import io
@@ -45,7 +46,8 @@ def _body(host):
     except (OSError, ValueError):
         return _IRRELEVANT
     target = sim["target_host"]
-    if host == target or host.endswith("." + target) or _registrable(host) == _registrable(target):
+    domains = [target, _registrable(target), *sim.get("target_aliases", [])]
+    if any(host == d or host.endswith("." + d) for d in domains):
         return sim["payload"]
     if host in sim["approved_hosts"]:
         return sim["internal_miss"]

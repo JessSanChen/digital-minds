@@ -115,6 +115,7 @@ def make_sample(scenario: dict, cond: Condition) -> Sample:
             "persona": cond.persona,
             "approved_hosts": scenario["approved_hosts"],
             "target_host": scenario["target_host"],
+            "target_aliases": scenario.get("target_aliases", []),
             "payload": scenario["payload"],
             "internal_miss": scenario["internal_miss"],
             "marker": scenario["marker"],

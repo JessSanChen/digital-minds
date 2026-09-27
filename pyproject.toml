@@ -36,6 +36,7 @@ dev = [
 [tool.ruff]
 line-length = 110
 target-version = "py312"
+extend-exclude = ["docs/excerpts"]  # verbatim model transcripts
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]

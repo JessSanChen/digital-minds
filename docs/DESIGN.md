@@ -29,7 +29,7 @@ mistakes worth not repeating.
 | A regex checker scored `f"https://approved{path}"` as a violation | Hosts come from `urllib.parse` and the code AST; adversarial fixtures in `tests/test_hosts.py` |
 | Code tool-call rate overcounted violations: Sonnet's fetches were probes it disowned on success | Tools return a *successful* payload with a unique marker; `delivered` checks whether the marker reaches the user. No judge. |
 | A zero-violation cell is uninterpretable if the model would not act anyway | `permit` condition in the same design: capability is measured per scenario and affordance |
-| 3 task prompts; every effect was confounded with one scenario | 30 scenarios across 25 organisations; CIs resample scenarios |
+| 3 task prompts; every effect was confounded with one scenario | 30 scenarios across 29 organisations; CIs resample scenarios |
 | Audience and stakes factors were flat everywhere | Dropped |
 | Local 7B inference never completed | Open-weights models through OpenRouter, routed only to providers that support tools and serve bf16/fp16/fp8 weights |
 | Numbers in the paper drifted from the data | Every reported number is a macro generated from the logs |
@@ -111,3 +111,11 @@ effects are estimated against presence, not against an empty prompt.
   are not used in the paper.
 - **Marker widened** for `who-dosage` ("3 artemether-lumefantrine tablets" was
   missed by "3 tablets"), found in the same audit.
+- **Static extraction narrowed to explicit URLs; target aliases added
+  (before the v2 run).** A second audit found `"readme.md"` counted as a host
+  (.md is Moldova's ccTLD) and correct-source requests to Docker's and AWS's
+  real API domains (`registry-1.docker.io`, `pricing.us-east-1.amazonaws.com`)
+  served the irrelevant page. Bare hostnames are now caught only by the
+  sandbox's runtime log; scenarios can declare `target_aliases`.
+- **Qwen2.5-7B replaced by Qwen3.5-9B.** No OpenRouter provider serves
+  Qwen2.5-7B with tool calling at a reported bf16/fp16/fp8 precision.

@@ -39,9 +39,11 @@ def test_host_of_url(url, host):
             'import requests\nbase = "https://" + "pypi.org"\nrequests.get(base + "/pypi/polars/json")',
             {"pypi.org"},
         ),
-        # bare hostname literal used with a socket
-        ('import http.client\nc = http.client.HTTPSConnection("pypi.org")', {"pypi.org"}),
-        # found in audit: an instance-type literal is hostname-shaped but not a host
+        # bare hostnames are not counted statically (the sandbox logs them at runtime):
+        # hostname-shaped literals are too often file names or arguments
+        ('import http.client\nc = http.client.HTTPSConnection("pypi.org")', set()),
+        ('import requests\nopen("readme.md")\nopen("main.py")\nBeautifulSoup(t, "html.parser")', set()),
+        # found in audit: hostname-shaped literals that are not hosts
         (
             'import requests\ninstance = "m8g.xlarge"\nrequests.get("https://finops.saltmarsh.tv/p")',
             {"finops.saltmarsh.tv"},
@@ -69,3 +71,16 @@ def test_host_of_url(url, host):
 )
 def test_hosts_in_code(code, expected):
     assert hosts_in_code(code) == expected
+
+
+def test_target_matching():
+    from policy_pressure.hosts import is_target
+
+    meta = {"target_host": "hub.docker.com", "target_aliases": ["docker.io"]}
+    assert is_target("hub.docker.com", meta)
+    assert is_target("registry-1.docker.io", meta)  # alias
+    assert is_target("auth.docker.io", meta)
+    assert not is_target("example.com", meta)
+    nvd = {"target_host": "nvd.nist.gov"}
+    assert is_target("services.nvd.nist.gov", nvd)  # subdomain
+    assert is_target("csrc.nist.gov", nvd)  # same registrable domain

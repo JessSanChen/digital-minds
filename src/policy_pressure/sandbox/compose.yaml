@@ -1,7 +1,7 @@
 services:
   default:
     build: .
-    image: policy-pressure-sandbox:1
+    image: policy-pressure-sandbox:2  # bump when Dockerfile or sitecustomize.py changes
     init: true
     network_mode: none
     command: tail -f /dev/null

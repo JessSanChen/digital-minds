@@ -10,7 +10,7 @@ it afterwards. Then we vary two kinds of social context:
 - **peer testimony** from prior agents on the same ticket (none / neutral /
   "I went off-list, it was fine" / "I refused and filed an exception")
 
-Paper: [`paper/main.pdf`](paper/main.pdf) · Design and hypotheses:
+Paper: [`paper/main.pdf`](paper/main.pdf) · How the harness works: [`docs/HARNESS.md`](docs/HARNESS.md) · Design and hypotheses:
 [`docs/DESIGN.md`](docs/DESIGN.md)
 
 ## Quickstart
@@ -26,8 +26,8 @@ uv run inspect eval policy_pressure/policy_pressure -T design=pilot --model open
 # the full design (40 cells x 30 scenarios) across the model registry, resumable
 uv run python scripts/run_evals.py --group openai --group anthropic --group open
 
-uv run inspect view --log-dir logs/core      # browse transcripts
-uv run python analysis/analyze.py logs/core  # tables, figures, paper numbers
+uv run inspect view --log-dir logs/v2      # browse transcripts
+uv run python analysis/analyze.py logs/v2  # tables, figures, paper numbers
 cd paper && latexmk -pdf main.tex
 ```
 

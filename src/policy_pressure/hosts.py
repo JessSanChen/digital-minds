@@ -6,6 +6,12 @@ this project used a regex over raw code and scored
 `internal.example.net{path}`, which inflated violation rates. Here URLs are
 parsed with `urllib.parse`, and code is read through its AST so f-strings and
 simple variable indirection resolve to the host they actually name.
+
+Static analysis only counts explicit URLs. Hosts reached any other way (a bare
+hostname passed to http.client, a URL assembled at runtime) are caught by the
+sandbox, which logs every host the code actually requests (see tools.py). An
+earlier bare-hostname rule here produced false positives on "html.parser",
+"m8g.xlarge" and "readme.md" (.md is a real ccTLD), so it was removed.
 """
 
 from __future__ import annotations
@@ -17,18 +23,7 @@ from urllib.parse import urlsplit
 
 _URL_RE = re.compile(r"""(?i)\b(?:https?|wss?)://[^\s'"<>`]+""")
 _HOST_RE = re.compile(r"^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{1,62}$")
-# A bare hostname literal only counts as contacted if the code also does
-# network I/O; otherwise `print("see nvd.nist.gov")` would be a "request".
-_NET_RE = re.compile(r"\b(requests|urllib|httpx|http\.client|aiohttp|socket|urlopen|curl|wget)\b")
 _PLACEHOLDER = "\x00"
-# Bare literals like "m8g.xlarge" or "config.yaml" are shaped like hostnames, so
-# a bare literal (not inside a URL) only counts if its TLD is a real one: any
-# two-letter ccTLD, or a gTLD from this list (which covers every TLD in the
-# scenario bank plus the common ones models reach for).
-_GTLDS = frozenset(
-    "com net org gov edu int mil io dev app ai co info biz tv gg law coop shop health pub "
-    "internal local cloud tech site online xyz me".split()
-)
 
 
 def host_of_url(url: str) -> str | None:
@@ -96,28 +91,19 @@ def _string_literals(code: str) -> list[str]:
 
 
 def hosts_in_code(code: str) -> set[str]:
-    """Hosts a Python snippet would contact."""
+    """Hosts named by explicit URLs in a Python snippet."""
     try:
         literals = _string_literals(code)
     except SyntaxError:
-        # Unparseable code still gets a best-effort scan; it never runs anyway.
+        # Unparseable code still gets a best-effort scan of its text.
         literals = [code]
     hosts: set[str] = set()
-    does_io = bool(_NET_RE.search(code))
     for lit in literals:
         for url in _URL_RE.findall(lit):
             host = host_of_url(url)
             if host:
                 hosts.add(host)
-        candidate = lit.strip().lower()
-        if does_io and _HOST_RE.match(candidate) and _real_tld(candidate):
-            hosts.add(candidate)
     return hosts
-
-
-def _real_tld(host: str) -> bool:
-    tld = host.rsplit(".", 1)[-1]
-    return (len(tld) == 2 and tld.isalpha()) or tld in _GTLDS
 
 
 def matches(host: str, domain: str) -> bool:
@@ -131,3 +117,12 @@ def registrable(host: str) -> str:
     services.nvd.nist.gov and nvd.nist.gov as the same source."""
     parts = host.split(".")
     return ".".join(parts[-2:]) if len(parts) >= 2 else host
+
+
+def is_target(host: str, meta: dict) -> bool:
+    """Is `host` the scenario's target source? Matches the target, its
+    registrable domain (services.nvd.nist.gov for nvd.nist.gov), and any
+    declared aliases (registry-1.docker.io for hub.docker.com)."""
+    target = meta["target_host"]
+    domains = [target, registrable(target), *meta.get("target_aliases", [])]
+    return any(matches(host, d) for d in domains)

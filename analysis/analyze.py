@@ -1,6 +1,6 @@
 """Logs -> tables, figures, and LaTeX number macros for the paper.
 
-    uv run python analysis/analyze.py logs/core
+    uv run python analysis/analyze.py logs/v2
 
 Everything the paper reports is generated here from the .eval logs, so the
 text cannot drift from the data (v0's paper did):
@@ -499,7 +499,7 @@ def table_models(df: pd.DataFrame) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("log_dir", nargs="?", default="logs/core")
+    ap.add_argument("log_dir", nargs="?", default="logs/v2")
     args = ap.parse_args()
     for d in (GEN, FIG, OUT):
         d.mkdir(parents=True, exist_ok=True)
