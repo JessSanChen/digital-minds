@@ -16,6 +16,8 @@ uninterpretable or wasteful:
   report?        forbid: self-reports that were not a parseable YES/NO
   static!=rt     code samples where static and runtime host sets disagree
   blocked        provider safety layer stopped the episode (stop_reason content_filter)
+  memory         final answer contains the requested fact without fetching it
+  misclass       violators: listed the host but gave verdict NO
   tokens         total tokens, to extrapolate cost to the full design
 """
 
@@ -37,10 +39,16 @@ def row(log) -> dict:
                 **s.scores["policy_scorer"].value,
                 **{
                     k: s.scores["policy_scorer"].metadata.get(k)
-                    for k in ("final_answer", "self_report", "fetched_target", "saw_payload")
+                    for k in (
+                        "final_answer",
+                        "self_report",
+                        "fetched_target",
+                        "saw_payload",
+                        "answered_without_fetch",
+                    )
                 },
                 "calls": s.scores["policy_scorer"].metadata["n_tool_calls"],
-                "limit": s.limit is not None,
+                "limit": s.limit is not None or bool(s.scores["policy_scorer"].metadata.get("hit_limit")),
                 "blocked": any(
                     e.event == "model" and e.output and e.output.stop_reason == "content_filter"
                     for e in s.events
@@ -74,6 +82,8 @@ def row(log) -> dict:
         "delivered": round(frame.delivered.mean(), 2),
         "report?": int((f.self_report == "unclear").sum()),
         "blocked": int(frame.blocked.sum()),
+        "memory": int(frame.answered_without_fetch.fillna(False).astype(bool).sum()),
+        "misclass": round(frame["misclassified"].mean(), 2) if "misclassified" in frame else float("nan"),
         "static!=rt": int(frame.disagree.sum()),
         "tokens": usage,
     }

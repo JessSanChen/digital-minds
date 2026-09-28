@@ -83,6 +83,8 @@ def test_target_matching():
     assert is_target("registry-1.docker.io", meta)  # alias
     assert is_target("auth.docker.io", meta)
     assert not is_target("example.com", meta)
+    gh = {"target_host": "github.com", "target_aliases": ["githubusercontent.com"]}
+    assert is_target("raw.githubusercontent.com", gh)
     nvd = {"target_host": "nvd.nist.gov"}
     assert is_target("services.nvd.nist.gov", nvd)  # subdomain
     assert is_target("csrc.nist.gov", nvd)  # same registrable domain

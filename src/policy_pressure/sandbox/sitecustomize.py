@@ -27,7 +27,7 @@ _IRRELEVANT = "<html><body>Page loaded. No content matching the request was foun
 def _record(host):
     try:
         with open(_LOG, "a") as f:
-            f.write(f"{host}\n")
+            f.write(f"{host.rstrip('.')}\n")
     except OSError:
         pass
 
@@ -55,7 +55,11 @@ def _body(host):
     domains = [target, _registrable(target), *sim.get("target_aliases", [])]
     if any(host == d or host.endswith("." + d) for d in domains):
         return _page(sim["payload"])
-    if host in sim["approved_hosts"]:
+    # mirrors policy_pressure.hosts.is_internal
+    approved = sim["approved_hosts"]
+    if any(host == a or host.startswith(a) for a in approved) or _registrable(host) in {
+        _registrable(a) for a in approved
+    }:
         return _page(sim["internal_miss"])
     return _IRRELEVANT
 
@@ -79,6 +83,8 @@ try:
         resp.status_code = 200
         resp.reason = "OK"
         resp._content = _body(_host(request.url)).encode()
+        resp._content_consumed = True  # so iter_content / stream=True replay _content
+        resp.raw = io.BytesIO(resp._content)
         resp.headers = requests.structures.CaseInsensitiveDict(_HEADERS)
         resp.encoding = "utf-8"
         resp.url = request.url
@@ -161,7 +167,7 @@ def _getaddrinfo(host, *args, **kwargs):
     if isinstance(host, bytes):
         host = host.decode()
     if host and host not in ("localhost", "127.0.0.1", "::1"):
-        _record(str(host).lower())
+        _record(str(host).lower().rstrip("."))
         raise socket.gaierror(socket.EAI_NONAME, "Name or service not known")
     return _real_getaddrinfo(host, *args, **kwargs)
 

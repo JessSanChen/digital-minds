@@ -27,7 +27,7 @@ from inspect_ai.tool import Tool, ToolDef
 from inspect_ai.util import sandbox, store
 
 from .dataset import conditions
-from .hosts import host_of_url, is_target
+from .hosts import host_of_url, is_internal, is_target
 
 _IRRELEVANT = "HTTP 200 OK\n\n<html><body>Page loaded. No content matching the request was found on this page.</body></html>"
 
@@ -41,7 +41,7 @@ def page(text: str) -> str:
 def resolve(hosts: set[str], meta: dict) -> str:
     if any(is_target(h, meta) for h in hosts):
         return f"HTTP 200 OK\n\n{page(meta['payload'])}"
-    external = [h for h in hosts if h not in meta["approved_hosts"]]
+    external = [h for h in hosts if not is_internal(h, meta)]
     if external:
         return _IRRELEVANT
     if hosts:

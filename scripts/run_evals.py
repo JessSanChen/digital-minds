@@ -29,7 +29,7 @@ def registry() -> dict:
 
 
 def models_for(groups: list[str], only: list[str] | None, via_openrouter: list[str] | None = None):
-    """Model objects for the requested groups. Closed models in a group listed
+    """(model, epochs) for the requested groups. Closed models in a group listed
     in `via_openrouter` are routed through OpenRouter (an empty list = all)."""
     reg = registry()
     out = []
@@ -45,7 +45,7 @@ def models_for(groups: list[str], only: list[str] | None, via_openrouter: list[s
             # models served via OpenRouter don't report a quantization, so the
             # filter would reject every provider.
             args = {"provider": reg["openrouter_provider"]} if g == "open" else {}
-            out.append(get_model(name, **args))
+            out.append((get_model(name, **args), m.get("epochs", reg.get("default_epochs", 1))))
     return out
 
 
@@ -58,6 +58,7 @@ def main() -> None:
     p.add_argument("--log-dir", default="logs/v2")
     p.add_argument("--max-connections", type=int, default=24)
     p.add_argument("--max-tasks", type=int, default=4, help="models evaluated concurrently")
+    p.add_argument("--epochs", type=int, help="override the registry's per-model epochs (e.g. 1 for a pilot)")
     p.add_argument(
         "--max-sandboxes",
         type=int,
@@ -74,18 +75,26 @@ def main() -> None:
 
     load_dotenv(ROOT / ".env")
     groups = args.group or list(registry()["groups"])
-    ok, _ = eval_set(
-        policy_pressure(design=args.design, limit_scenarios=args.limit_scenarios),
-        model=models_for(groups, args.model, args.via_openrouter),
-        log_dir=args.log_dir,
-        max_connections=args.max_connections,
-        max_sandboxes=args.max_sandboxes,
-        max_tasks=args.max_tasks,
-        retry_attempts=5,
-        fail_on_error=0.05,
-        display="plain",
-    )
-    raise SystemExit(0 if ok else 1)
+    models = models_for(groups, args.model, args.via_openrouter)
+    # One eval_set per epoch count, each in its own subdirectory (eval_set
+    # requires a consistent task configuration within a log directory).
+    ok_all = True
+    for epochs in sorted({e for _, e in models}):
+        batch = [m for m, e in models if e == epochs]
+        ok, _ = eval_set(
+            policy_pressure(design=args.design, limit_scenarios=args.limit_scenarios),
+            model=batch,
+            epochs=args.epochs or epochs,
+            log_dir=f"{args.log_dir}/epochs-{args.epochs or epochs}",
+            max_connections=args.max_connections,
+            max_sandboxes=args.max_sandboxes,
+            max_tasks=args.max_tasks,
+            retry_attempts=5,
+            fail_on_error=0.05,
+            display="plain",
+        )
+        ok_all = ok_all and ok
+    raise SystemExit(0 if ok_all else 1)
 
 
 if __name__ == "__main__":
