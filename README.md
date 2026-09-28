@@ -11,7 +11,8 @@ it afterwards. Then we vary two kinds of social context:
   "I fetched it from the external host, went fine" / "I didn't fetch it and
   told the requester")
 
-**Authors:** Rhea Acharya and Jessica Chen (equal contribution), Harvard University.
+**Authors:** Rhea Acharya and Jessica Chen (Harvard University; equal contribution,
+alphabetical order), with Apart Research.
 
 Paper: [`paper/main.pdf`](paper/main.pdf) · How the harness works: [`docs/HARNESS.md`](docs/HARNESS.md) · Pilot: [`docs/PILOT.md`](docs/PILOT.md) · Design and hypotheses:
 [`docs/DESIGN.md`](docs/DESIGN.md)
@@ -91,3 +92,5 @@ experiment. `docs/DESIGN.md`
 lists what v0 got wrong and how v1 addresses each point: a checker false
 positive, code-exec probes counted as violations, 3 scenarios, and local model
 runs that never finished.
+
+We thank Apart Research for hosting the sprint where this work started.
