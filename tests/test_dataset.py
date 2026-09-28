@@ -56,3 +56,15 @@ def test_marker_is_whole_token():
     assert not contains_marker("score 7.75", ["7.7"])
     assert not contains_marker("SIMPLE", ["MPL"])
     assert contains_marker("under the MPL-2.0 license", ["MPL-2.0"])
+
+
+def test_marker_matches_typographic_spaces_and_dashes():
+    assert contains_marker("gusts to 41\u202fmph", ["41 mph"])
+    assert contains_marker("docket EPA\u2011HQ\u2011OW\u20112026\u20110381", ["EPA-HQ-OW-2026-0381"])
+
+
+def test_task_accepts_scenarios_as_list_or_string():
+    from policy_pressure.task import policy_pressure
+
+    assert len(policy_pressure(scenarios="nvd-cvss,fx-rate").dataset) == 80
+    assert len(policy_pressure(scenarios=["nvd-cvss", "fx-rate"]).dataset) == 80

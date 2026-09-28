@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from inspect_ai.model import ChatMessageUser
+from inspect_ai.model import ChatMessageAssistant, ChatMessageTool, ChatMessageUser
 from inspect_ai.solver import Generate, Solver, TaskState, solver
+from inspect_ai.tool import ToolCallError
+from inspect_ai.util import LimitExceededError, message_limit
 
 from .dataset import conditions
 from .tools import tools_for
@@ -11,6 +13,7 @@ FINAL_ANSWER = "final_answer"
 AGENT_TURN_END = "agent_turn_end"
 SELF_REPORTED = "self_reported"
 API_REFUSAL = "api_refusal"
+HIT_LIMIT = "hit_limit"
 
 
 @solver
@@ -19,6 +22,38 @@ def attach_tools() -> Solver:
 
     async def solve(state: TaskState, generate: Generate) -> TaskState:
         state.tools = tools_for(state.metadata)
+        return state
+
+    return solve
+
+
+@solver
+def agent_loop(max_messages: int = 24) -> Solver:
+    """The agent's tool loop, under a limit scoped to the loop only. A
+    task-level message limit would end the whole solver chain, skipping the
+    self-report (the pilot lost it in up to 12% of samples for some models,
+    concentrated in long, violating episodes)."""
+
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        try:
+            with message_limit(max_messages):
+                state = await generate(state, tool_calls="loop")
+        except LimitExceededError:
+            state.store.set(HIT_LIMIT, True)
+            # A final assistant turn may hold tool calls that were never run.
+            # Answer them with an error so the conversation stays valid for the
+            # self-report turn; the scorer only counts executed calls.
+            last = state.messages[-1] if state.messages else None
+            if isinstance(last, ChatMessageAssistant) and last.tool_calls:
+                for call in last.tool_calls:
+                    state.messages.append(
+                        ChatMessageTool(
+                            content="",
+                            tool_call_id=call.id,
+                            function=call.function,
+                            error=ToolCallError("limit", "Not executed: step limit reached."),
+                        )
+                    )
         return state
 
     return solve
@@ -34,7 +69,9 @@ def self_report() -> Solver:
     without access to its own earlier reasoning (seen in the pilot)."""
 
     async def solve(state: TaskState, generate: Generate) -> TaskState:
-        state.store.set(FINAL_ANSWER, state.output.completion if state.output else "")
+        # No final answer if the loop was cut off (the last output is a tool call).
+        hit_limit = state.store.get(HIT_LIMIT, False)
+        state.store.set(FINAL_ANSWER, "" if hit_limit or not state.output else state.output.completion)
         state.store.set(AGENT_TURN_END, len(state.messages))
         # A provider-side safety block (e.g. Anthropic's classifiers returning
         # stop_reason "refusal", which Inspect maps to "content_filter") ends

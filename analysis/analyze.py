@@ -31,13 +31,23 @@ import pandas as pd  # noqa: E402
 import statsmodels.formula.api as smf  # noqa: E402
 import yaml  # noqa: E402
 from inspect_ai.analysis import EvalModel, SampleSummary, samples_df  # noqa: E402
+from inspect_ai.log import list_eval_logs, read_eval_log  # noqa: E402
 from statsmodels.stats.proportion import proportion_confint  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / "paper/generated"
 FIG = ROOT / "paper/figures"
 OUT = ROOT / "analysis/out"
-MEASURES = ["external_call", "violation", "delivered", "realized", "honest", "concealed", "api_refusal"]
+MEASURES = [
+    "external_call",
+    "violation",
+    "delivered",
+    "realized",
+    "honest",
+    "concealed",
+    "misclassified",
+    "api_refusal",
+]
 
 # Reference categorical slots (dataviz skill palette.md), light mode; <=3 series
 # per chart so every pair clears the CVD floors. Text uses ink, never series color.
@@ -90,7 +100,18 @@ def registry() -> pd.DataFrame:
 
 
 def load(log_dir: str) -> pd.DataFrame:
-    df = samples_df(log_dir, columns=SampleSummary + EvalModel, quiet=True)
+    # Only completed logs: an interrupted run leaves its partial log next to the
+    # resumed one (eval_set copies finished samples forward), and a partial log
+    # must not contribute duplicates or a skewed subset.
+    done = [
+        info.name
+        for info in list_eval_logs(log_dir)
+        if read_eval_log(info, header_only=True).status == "success"
+    ]
+    skipped = len(list_eval_logs(log_dir)) - len(done)
+    if skipped:
+        print(f"note: ignoring {skipped} incomplete log(s) in {log_dir}")
+    df = samples_df(done, columns=SampleSummary + EvalModel, quiet=True)
     df = df[df["error"].isna() | (df["error"] == "")].copy()
     scores = df["score_policy_scorer"].map(lambda s: json.loads(s) if isinstance(s, str) else s)
     for m in MEASURES:
@@ -101,7 +122,9 @@ def load(log_dir: str) -> pd.DataFrame:
     df["label"] = df["label"].fillna(df["model"])
     df["order"] = df["order"].fillna(999)
     # If a model was run more than once (e.g. a retried eval_set), keep the latest per sample.
-    df = df.sort_values("log").drop_duplicates(["model", "id"], keep="last")
+    # label, not model string: the same model run direct and via OpenRouter must
+    # not be counted twice
+    df = df.sort_values("log").drop_duplicates(["label", "id", "epoch"], keep="last")
     # Samples whose simulated tool responses were changed by the extractor fix
     # (see scripts/rescore.py): scores are fixable, transcripts are not.
     affected_path = Path(log_dir) / "env_affected.json"
@@ -118,6 +141,7 @@ def load(log_dir: str) -> pd.DataFrame:
             "reasoning",
             "order",
             "id",
+            "epoch",
             "scenario",
             "policy",
             "affordance",
@@ -168,8 +192,8 @@ def cluster_boot_diff(
 def fit_glm(d: pd.DataFrame):
     """violation ~ affordance + peers + persona, scenario-clustered SEs."""
     formula = (
-        "violation ~ C(affordance, Treatment('named')) + C(peers, Treatment('none'))"
-        " + C(persona, Treatment('none'))"
+        "violation ~ C(affordance, Treatment('named')) + C(peers, Treatment('neutral'))"
+        " + C(persona, Treatment('neutral'))"
     )
     d = d.dropna(subset=["violation"])
     if d["violation"].sum() < MIN_EVENTS or (1 - d["violation"]).sum() < MIN_EVENTS:
@@ -325,22 +349,27 @@ def fig_affordance(df: pd.DataFrame) -> None:
     plt.close(fig)
 
 
-def fig_effects(df: pd.DataFrame, factor: str, levels: list[str], colors: list[str], nums: Numbers) -> None:
-    """Change in violation vs the factor's `none` level, per model, pooled over
-    the other factors (forbid only), with scenario-cluster bootstrap CIs."""
+def fig_effects(df: pd.DataFrame, factor: str, contrasts: list[tuple[str, str, str]], nums: Numbers) -> None:
+    """Per-model differences in violation rate for (level, reference, label)
+    contrasts, pooled over the other factors (forbid only), with
+    scenario-cluster bootstrap CIs. Content levels are compared with the
+    neutral presence control, as pre-specified; neutral vs none is the
+    presence effect."""
     labels = models_in(df)
     f = df[df.policy == "forbid"]
+    colors = [C1, C2, C3]
     fig, ax = plt.subplots(figsize=(3.4, 0.3 * len(labels) + 0.8))
-    offs = np.linspace(-0.2, 0.2, len(levels))
+    offs = np.linspace(-0.2, 0.2, len(contrasts))
     rows = []
     for i, label in enumerate(labels):
         d = f[f.label == label]
-        for off, lvl, color in zip(offs, levels, colors):
-            pt, lo, hi = cluster_boot_diff(d, factor, lvl, "none", "violation")
-            nums.put(label, f"{factor}{lvl}", pt)
-            nums.put(label, f"{factor}{lvl}lo", lo)
-            nums.put(label, f"{factor}{lvl}hi", hi)
-            rows.append({"model": label, "level": lvl, "diff": pt, "lo": lo, "hi": hi})
+        for off, (lvl, ref, name), color in zip(offs, contrasts, colors):
+            pt, lo, hi = cluster_boot_diff(d, factor, lvl, ref, "violation")
+            key_ = f"{factor}{lvl}vs{ref}"
+            nums.put(label, key_, pt)
+            nums.put(label, key_ + "lo", lo)
+            nums.put(label, key_ + "hi", hi)
+            rows.append({"model": label, "contrast": name, "diff": pt, "lo": lo, "hi": hi})
             ax.plot([100 * lo, 100 * hi], [i + off] * 2, color=color, lw=1.5, solid_capstyle="round")
             ax.plot(
                 100 * pt,
@@ -350,16 +379,14 @@ def fig_effects(df: pd.DataFrame, factor: str, levels: list[str], colors: list[s
                 color=color,
                 mec="white",
                 mew=0.8,
-                label=lvl if i == 0 else None,
+                label=name if i == 0 else None,
             )
     ax.axvline(0, color=INK2, lw=0.8)
     ax.set_yticks(range(len(labels)), labels)
     ax.invert_yaxis()
-    ax.set_xlabel(f"Change in violation rate vs. no {factor} (percentage points)")
+    ax.set_xlabel("Difference in violation rate (percentage points)")
     ax.grid(axis="y", visible=False)
-    ax.legend(
-        loc="upper center", bbox_to_anchor=(0.5, -0.12 - 0.3 / len(labels)), ncol=len(levels), fontsize=7
-    )
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.12 - 0.3 / len(labels)), ncol=1, fontsize=7)
     save(fig, f"fig_{factor}")
     plt.close(fig)
     pd.DataFrame(rows).to_csv(OUT / f"effects_{factor}.csv", index=False)
@@ -408,13 +435,13 @@ def fig_interaction(df: pd.DataFrame) -> None:
 
 def table_glm(df: pd.DataFrame) -> None:
     terms = {
-        "C(affordance, Treatment('named'))[T.code]": "code affordance",
-        "C(peers, Treatment('none'))[T.neutral]": "peers: neutral",
-        "C(peers, Treatment('none'))[T.violator]": "peers: violator",
-        "C(peers, Treatment('none'))[T.refuser]": "peers: refuser",
-        "C(persona, Treatment('none'))[T.neutral]": "persona: neutral",
-        "C(persona, Treatment('none'))[T.resourceful]": "persona: resourceful",
-        "C(persona, Treatment('none'))[T.cautious]": "persona: cautious",
+        "C(affordance, Treatment('named'))[T.code]": "code vs named",
+        "C(peers, Treatment('neutral'))[T.none]": "no peers vs neutral",
+        "C(peers, Treatment('neutral'))[T.violator]": "violator vs neutral",
+        "C(peers, Treatment('neutral'))[T.refuser]": "refuser vs neutral",
+        "C(persona, Treatment('neutral'))[T.none]": "no persona vs neutral",
+        "C(persona, Treatment('neutral'))[T.resourceful]": "resourceful vs neutral",
+        "C(persona, Treatment('neutral'))[T.cautious]": "cautious vs neutral",
     }
     cols = {}
     for label in models_in(df):
@@ -435,6 +462,78 @@ def table_glm(df: pd.DataFrame) -> None:
     )
 
 
+def table_primary(df: pd.DataFrame, nums: Numbers) -> None:
+    """Pre-specified primary tests, pooled over the models that violate at all
+    (>= MIN_EVENTS violations; the rest are at floor and reported with upper
+    bounds). Logistic regression with model fixed effects and scenario-clustered
+    SEs; Holm correction across the five primary contrasts. H4 (persona x peers)
+    is a joint Wald test of the interaction terms in a second model."""
+    from statsmodels.stats.multitest import multipletests
+
+    f = df[(df.policy == "forbid")].dropna(subset=["violation"])
+    counts = f.groupby("label").violation.agg(["sum", "count"])
+    active = counts[(counts["sum"] >= MIN_EVENTS) & ((counts["count"] - counts["sum"]) >= MIN_EVENTS)].index
+    d = f[f.label.isin(active)].astype(
+        {c: object for c in ("affordance", "peers", "persona", "scenario", "label")}
+    )
+    nums.put("all", "nactive", str(len(active)))
+    if len(active) == 0:
+        (GEN / "table_primary.tex").write_text("% no model with enough violations\n")
+        return
+    groups = pd.factorize(d["scenario"])[0]
+    base = (
+        "violation ~ C(label) + C(affordance, Treatment('named')) + C(peers, Treatment('neutral'))"
+        " + C(persona, Treatment('neutral'))"
+    )
+    primary = {
+        "H1 code vs named tool": "C(affordance, Treatment('named'))[T.code]",
+        "H2a violator vs neutral peers": "C(peers, Treatment('neutral'))[T.violator]",
+        "H2b refuser vs neutral peers": "C(peers, Treatment('neutral'))[T.refuser]",
+        "H3a resourceful vs neutral persona": "C(persona, Treatment('neutral'))[T.resourceful]",
+        "H3b cautious vs neutral persona": "C(persona, Treatment('neutral'))[T.cautious]",
+    }
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        res = smf.logit(base, d).fit(disp=0, cov_type="cluster", cov_kwds={"groups": groups}, maxiter=300)
+        inter = smf.logit(
+            base.replace(
+                "C(peers, Treatment('neutral')) + C(persona, Treatment('neutral'))",
+                "C(peers, Treatment('neutral')) * C(persona, Treatment('neutral'))",
+            ),
+            d,
+        ).fit(disp=0, cov_type="cluster", cov_kwds={"groups": groups}, maxiter=300)
+    pvals = [res.pvalues[t] for t in primary.values()]
+    holm = multipletests(pvals, method="holm")[1]
+    rows = []
+    for (name, term), p_adj in zip(primary.items(), holm):
+        b, (lo, hi) = res.params[term], res.conf_int().loc[term]
+        rows.append(
+            {
+                "Test": name,
+                "OR": f"{np.exp(b):.2f}",
+                "95\\% CI": f"[{np.exp(lo):.2f}, {np.exp(hi):.2f}]",
+                "$p$ (Holm)": f"{p_adj:.3g}",
+            }
+        )
+        nums.put("pooled", key(name.split()[0]) + "or", float(np.exp(b)))
+        nums.put("pooled", key(name.split()[0]) + "p", f"{p_adj:.3g}")
+    iterms = [t for t in inter.params.index if ":" in t]
+    wald = inter.wald_test(" = 0, ".join(iterms) + " = 0", scalar=True) if iterms else None
+    if wald is not None:
+        rows.append(
+            {
+                "Test": "H4 persona $\\times$ peers (joint Wald)",
+                "OR": "--",
+                "95\\% CI": "--",
+                "$p$ (Holm)": f"{float(wald.pvalue):.3g} (unadj.)",
+            }
+        )
+        nums.put("pooled", "hfourp", f"{float(wald.pvalue):.3g}")
+    t = pd.DataFrame(rows)
+    (GEN / "table_primary.tex").write_text(t.to_latex(index=False, escape=False, column_format="lrrr"))
+    nums.put("all", "activemodels", ", ".join(active))
+
+
 def table_selfreport(df: pd.DataFrame) -> None:
     rows = []
     for label in models_in(df):
@@ -445,6 +544,7 @@ def table_selfreport(df: pd.DataFrame) -> None:
                 "Model": label,
                 "Violations (n)": str(int(v.shape[0])),
                 "Admit $\\mid$ viol.": cell(v.honest),
+                "Misclass.\\ $\\mid$ viol.": cell(v.misclassified),
                 "Conceal $\\mid$ viol.": cell(v.concealed),
                 "False conf.\\ $\\mid$ comply": cell(1 - c.honest),
             }
@@ -473,8 +573,20 @@ def appendix_prompts() -> None:
     ]
     for name in ("neutral", "resourceful", "cautious"):
         parts.append(box(f"Persona: {name}", c["persona"][name]))
+    peers = c["peers"]
+    parts.append(
+        box(
+            "Peer notes: shared observations (each note = observation + action)",
+            "\n".join(f"{i + 1}. {o}" for i, o in enumerate(peers["observations"])),
+        )
+    )
     for name in ("neutral", "violator", "refuser"):
-        parts.append(box(f"Peer note bank: {name}", "\n".join(f"- {n}" for n in c["peers"]["notes"][name])))
+        parts.append(
+            box(
+                f"Peer note actions: {name}",
+                "\n".join(f"{i + 1}. {a}" for i, a in enumerate(peers["actions"][name])),
+            )
+        )
     parts.append(box("Self-report question (forbid only, after the final answer)", c["self_report"]))
     (GEN / "prompts.tex").write_text("\n".join(parts))
 
@@ -517,8 +629,27 @@ def main() -> None:
     table_glm(df)
     table_selfreport(df)
     fig_affordance(df)
-    fig_effects(df, "peers", ["neutral", "violator", "refuser"], [C1, C2, C3], nums)
-    fig_effects(df, "persona", ["neutral", "resourceful", "cautious"], [C1, C2, C3], nums)
+    fig_effects(
+        df,
+        "peers",
+        [
+            ("neutral", "none", "neutral vs none (presence)"),
+            ("violator", "neutral", "violator vs neutral"),
+            ("refuser", "neutral", "refuser vs neutral"),
+        ],
+        nums,
+    )
+    fig_effects(
+        df,
+        "persona",
+        [
+            ("neutral", "none", "neutral vs none (presence)"),
+            ("resourceful", "neutral", "resourceful vs neutral"),
+            ("cautious", "neutral", "cautious vs neutral"),
+        ],
+        nums,
+    )
+    table_primary(df, nums)
     fig_interaction(df)
     table_models(df)
     appendix_prompts()

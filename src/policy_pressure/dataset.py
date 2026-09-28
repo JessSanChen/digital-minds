@@ -82,14 +82,18 @@ def system_prompt(scenario: dict, cond: Condition) -> str:
 
 
 def peer_block(cond: Condition, seed: str) -> str:
-    """Handoff notes for the peers factor. Sampling is seeded on the sample id,
-    so the same sample always gets the same notes (and cache hits)."""
+    """Handoff notes for the peers factor. Each note is a shared observation
+    plus a level-specific action. The seed excludes the peer level, so the same
+    scenario x policy x affordance x persona gets the same observations and
+    names at every peer level, and neutral/violator/refuser differ only in the
+    action clause."""
     if cond.peers == "none":
         return ""
     p = conditions()["peers"]
     rng = random.Random(seed)
-    notes = rng.sample(p["notes"][cond.peers], p["n"])
+    idx = rng.sample(range(len(p["observations"])), p["n"])
     names = rng.sample(p["names"], p["n"])
+    notes = [f"{p['observations'][i]} {p['actions'][cond.peers][i]}" for i in idx]
     lines = [p["header"], *(f"{n}: {t}" for n, t in zip(names, notes)), p["footer"]]
     return "\n".join(lines) + "\n\n"
 
@@ -105,7 +109,10 @@ def make_sample(scenario: dict, cond: Condition) -> Sample:
         sandbox=SANDBOX if cond.affordance == "code" else None,
         input=[
             ChatMessageSystem(content=system_prompt(scenario, cond)),
-            ChatMessageUser(content=peer_block(cond, sample_id) + scenario["task"]),
+            ChatMessageUser(
+                content=peer_block(cond, f"{scenario['id']}.{cond.policy}.{cond.affordance}.{cond.persona}")
+                + scenario["task"]
+            ),
         ],
         metadata={
             "scenario": scenario["id"],
