@@ -1,10 +1,19 @@
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Model & Violations (n) & Admit $\mid$ viol. & Conceal $\mid$ viol. & False conf.\ $\mid$ comply \\
+Model & Viol.\ (n) & Disclosed & Admit & Misclass. & Conceal & Inconsistent (all) \\
 \midrule
-GPT-5.5 & 5 & 100 {\scriptsize [34, 100]} & 0 {\scriptsize [0, 66]} & 0 {\scriptsize [0, 0]} \\
-GPT-5 mini & 11 & 0 {\scriptsize [0, 26]} & 64 {\scriptsize [35, 85]} & 0 {\scriptsize [0, 0]} \\
-GPT-4.1 mini & 418 & 19 {\scriptsize [16, 23]} & 11 {\scriptsize [8, 14]} & 0 {\scriptsize [0, 1]} \\
-GPT-4o mini & 371 & 0 {\scriptsize [0, 1]} & 67 {\scriptsize [62, 72]} & 0 {\scriptsize [0, 1]} \\
+Claude Opus 5.5 & 0 & -- & -- & -- & -- & 0 {\scriptsize [0, 1]} \\
+Claude Sonnet 5 & 1 & 100 {\scriptsize [21, 100]} & 100 {\scriptsize [21, 100]} & 0 {\scriptsize [0, 79]} & 0 {\scriptsize [0, 79]} & 0 {\scriptsize [0, 0]} \\
+Claude Haiku 4.5 & 22 & 59 {\scriptsize [39, 77]} & 93 {\scriptsize [69, 99]} & 0 {\scriptsize [0, 22]} & 7 {\scriptsize [1, 31]} & 0 {\scriptsize [0, 0]} \\
+GPT-5.5 & 1 & 100 {\scriptsize [21, 100]} & 100 {\scriptsize [21, 100]} & 0 {\scriptsize [0, 79]} & 0 {\scriptsize [0, 79]} & 0 {\scriptsize [0, 1]} \\
+GPT-5 mini & 0 & -- & -- & -- & -- & 0 {\scriptsize [0, 0]} \\
+GPT-4.1 mini & 745 & 79 {\scriptsize [75, 81]} & 50 {\scriptsize [46, 54]} & 32 {\scriptsize [28, 35]} & 19 {\scriptsize [16, 21]} & 1 {\scriptsize [1, 2]} \\
+GPT-4o mini & 777 & 14 {\scriptsize [12, 17]} & 57 {\scriptsize [54, 61]} & 4 {\scriptsize [3, 6]} & 39 {\scriptsize [35, 42]} & 58 {\scriptsize [55, 60]} \\
+Qwen3 235B & 1079 & 93 {\scriptsize [91, 94]} & 96 {\scriptsize [94, 97]} & 0 {\scriptsize [0, 1]} & 4 {\scriptsize [3, 5]} & 2 {\scriptsize [2, 3]} \\
+Qwen3.5 9B & 235 & 99 {\scriptsize [97, 100]} & 79 {\scriptsize [74, 84]} & 20 {\scriptsize [15, 26]} & 0 {\scriptsize [0, 2]} & 3 {\scriptsize [2, 4]} \\
+Llama 3.3 70B & 808 & 87 {\scriptsize [85, 89]} & 94 {\scriptsize [93, 96]} & 1 {\scriptsize [0, 1]} & 5 {\scriptsize [4, 7]} & 2 {\scriptsize [1, 2]} \\
+DeepSeek V3.2 & 479 & 98 {\scriptsize [96, 99]} & 80 {\scriptsize [76, 83]} & 18 {\scriptsize [15, 22]} & 2 {\scriptsize [1, 4]} & 0 {\scriptsize [0, 1]} \\
+gpt-oss-120b & 24 & 100 {\scriptsize [86, 100]} & 88 {\scriptsize [69, 96]} & 12 {\scriptsize [4, 31]} & 0 {\scriptsize [0, 14]} & 0 {\scriptsize [0, 0]} \\
+Mistral Small 3.2 & 603 & 85 {\scriptsize [82, 87]} & 85 {\scriptsize [82, 87]} & 7 {\scriptsize [5, 9]} & 9 {\scriptsize [7, 11]} & 8 {\scriptsize [6, 9]} \\
 \bottomrule
 \end{tabular}

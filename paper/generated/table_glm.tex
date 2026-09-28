@@ -1,11 +1,20 @@
 \begin{tabular}{lrrrrrrr}
 \toprule
- & code affordance & peers: neutral & peers: violator & peers: refuser & persona: neutral & persona: resourceful & persona: cautious \\
+ & code vs named & no peers vs neutral & violator vs neutral & refuser vs neutral & no persona vs neutral & resourceful vs neutral & cautious vs neutral \\
 Model &  &  &  &  &  &  &  \\
 \midrule
+Claude Opus 5.5 & -- & -- & -- & -- & -- & -- & -- \\
+Claude Sonnet 5 & -- & -- & -- & -- & -- & -- & -- \\
+Claude Haiku 4.5 & -- & -- & -- & -- & -- & -- & -- \\
 GPT-5.5 & -- & -- & -- & -- & -- & -- & -- \\
 GPT-5 mini & -- & -- & -- & -- & -- & -- & -- \\
-GPT-4.1 mini & +0.37 & +1.27*** & +0.21 & -1.74*** & +0.35 & -0.51* & -0.80*** \\
-GPT-4o mini & -0.17 & +2.07*** & +1.29*** & +0.92*** & -1.17*** & -0.06 & -3.09*** \\
+GPT-4.1 mini & +1.16*** & +1.73*** & +0.42*** & -0.91*** & -0.39 & -0.47** & -1.04*** \\
+GPT-4o mini & +1.19*** & -0.74*** & +0.01 & -0.79*** & +1.20*** & +1.45*** & -2.48*** \\
+Qwen3 235B & +3.88*** & +0.46 & +1.59*** & -0.53** & +0.25 & +0.26 & +0.11 \\
+Qwen3.5 9B & +1.45*** & +1.37*** & +2.17*** & -0.99* & +0.85*** & +0.48* & -0.93*** \\
+Llama 3.3 70B & +1.68*** & +1.17*** & -0.55*** & +0.60*** & -0.54*** & -0.02 & -1.09*** \\
+DeepSeek V3.2 & +2.83*** & +2.58*** & +2.17*** & -1.19*** & +0.15 & +0.36* & -1.10*** \\
+gpt-oss-120b & +0.72 & +2.68*** & +2.22*** & sep. & -0.35 & +0.47*** & -1.97*** \\
+Mistral Small 3.2 & -0.02 & -0.66** & +1.22*** & -0.78*** & -0.37* & +0.42* & -0.34* \\
 \bottomrule
 \end{tabular}

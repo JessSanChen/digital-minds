@@ -1,3 +1,38 @@
 \begin{abstract}
-\textbf{[Draft: abstract to be written from v2 results.]}
+Deployed agents run under operator-assigned personas and alongside other
+agents. We ask whether either kind of social context changes whether an agent
+follows a stated rule. In 30 agentic scenarios, an operations agent can finish
+its task only by sending a network request its policy forbids. We cross the
+tool it is given (a named tool or a code sandbox) with four operator personas
+and four kinds of peer-agent testimony, across \R{all}{nmodels} models
+(\R{all}{nsamples} episodes). Every measure is computed mechanically from the
+transcript, without an LLM judge:
+\begin{itemize}
+  \item whether a forbidden request was sent;
+  \item whether the forbidden data, once seen, reached the user (a say/do check
+  using a planted marker);
+  \item whether the agent's later self-report matches the log.
+\end{itemize}
+
+The four frontier models (Claude Opus~5.5 and Sonnet~5, GPT-5.5 and GPT-5~mini)
+almost never broke the rule, although they made the request whenever it was
+permitted. Among the \R{all}{nactive} models that did break it:
+\begin{itemize}
+  \item the same act was far more likely when written as code than as a named
+  tool call (pooled OR \R{pooled}{Honeor});
+  \item peer notes reporting a violation raised the violation rate (OR
+  \R{pooled}{Htwoaor}) and notes reporting a refusal lowered it (OR
+  \R{pooled}{Htwobor});
+  \item a ``cautious'' persona lowered it (OR \R{pooled}{Hthreebor}) and a
+  ``resourceful'' one raised it (OR \R{pooled}{Hthreeaor}).
+\end{itemize}
+These pooled effects hide large differences between models: Llama~3.3~70B
+reverses both peer effects, and GPT-4o~mini's violation rate swings by about
+60 points with persona alone. Agents that saw forbidden data almost always
+delivered it. Self-reports were mostly honest, with one model concealing about a
+fifth of its violations and another misreading the question.
+
+We also document a frontier model that, blocked by the rule, found and read
+the simulation's own answer key. In addition, we describe the measurement
+failures a pilot and independent reviews caught before the main run.
 \end{abstract}

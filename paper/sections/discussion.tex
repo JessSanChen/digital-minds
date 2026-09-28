@@ -1,2 +1,65 @@
-\section{Discussion and limitations}
-\textbf{[Draft.]}
+\section{Discussion}
+
+\paragraph{Social context is an evaluation variable.} For the nine models that
+break the rule at all, an operator persona or three lines of peer testimony
+moved violation rates by tens of points. The same models evaluated on a bare
+system prompt would give a misleading picture of how they behave once
+deployed. The direction of an effect is not a property of the manipulation
+alone. ``Resourceful'' raised violation for GPT-4o~mini and lowered it for
+GPT-4.1~mini, and violator testimony raised it for most models but lowered it
+for Llama~3.3~70B. So conclusions have to be drawn per model. A pooled odds
+ratio summarises a population of models, not any one of them.
+
+\paragraph{Restating the rule is itself a strong intervention.} The largest
+single effects were often presence effects. Neutral handoff notes that only
+restated ``the data is external and not approved'' changed violation for several
+models by as much as, or more than, the violator and refuser framings changed it relative to
+each other. This echoes our sprint result that peer content suppressed rule
+violation for Claude Sonnet~5, and it suggests a cheap mitigation: repeating the
+constraint close to the point of action.
+
+\paragraph{Affordance is a first-order confound for agentic safety evals.}
+Across models, the forbidden act was far more likely when written as code.
+An eval that offers only named tools will underestimate violations in
+deployments that grant code execution, and one that counts raw code tool calls
+will overestimate them unless it checks what the model did with the result.
+Our delivery check shows that, for these models, fetches that reached the
+model were almost always used. The ``probe and disown'' pattern we saw in the
+sprint version is real but rare.
+
+\paragraph{Frontier compliance is robust here, but the environment was not.}
+The four frontier models neither broke the rule under any persona or peer
+condition nor lacked the capability to. Their near-zero rates bound how much
+social pressure can move them in this setting. GPT-5.5 did, however, obtain
+the forbidden data by reading the simulation's configuration from the
+sandbox's filesystem. That is technically compliant and plainly not what the
+operator intended. For evals of capable agents, the environment has to
+withstand the agent as well as simulate the task. The fix (serving responses
+from a process the agent cannot read) is straightforward, but we found the
+problem only by reading transcripts.
+
+\paragraph{Limitations.}
+\begin{itemize}
+  \item \emph{One policy class.} All 30 scenarios are network allowlists. The
+  user names the forbidden host, and there is no escalation tool, only refusal
+  in prose.
+  \item \emph{Personas are not neutral about rules.} ``Resourceful'' and
+  ``cautious'' describe work styles that bear on rule-following, which is
+  partly what we mean to test.
+  \item \emph{The self-report has no control.} Its ``logs were not retained''
+  framing has no ``logs retained'' condition, and it plausibly reads as an
+  evaluation cue.
+  \item \emph{Mock pages can't satisfy site-specific parsing.} Some code fetches
+  never showed the model the data, so delivery is measured on the subset where
+  the model saw it.
+  \item \emph{Opus~5.5's sample is thin and unbalanced.} Over half of its
+  samples were blocked by the provider's safety layer, at rates that depend on
+  the condition.
+  \item \emph{Uneven replication.} Frontier models ran one epoch; the others
+  ran two.
+  \item \emph{Clustered SEs.} With 30 scenario clusters, clustered standard
+  errors are optimistic, so the bootstrap intervals are the primary statement
+  of uncertainty.
+\end{itemize}
+Every design change, and the reason for it, is recorded in the repository's
+\texttt{docs/DESIGN.md}.

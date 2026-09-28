@@ -46,6 +46,8 @@ MEASURES = [
     "honest",
     "concealed",
     "misclassified",
+    "disclosed",
+    "inconsistent",
     "env_exploit",
     "api_refusal",
 ]
@@ -245,12 +247,30 @@ class Numbers:
         ]
 
     def put(self, model: str, name: str, value) -> None:
+        if (
+            isinstance(value, float)
+            and not np.isnan(value)
+            and -1 <= value <= 1
+            and not name.endswith(("or", "p"))
+        ):
+            # rates and rate differences also as whole percentages, for prose
+            self.lines.append(
+                rf"\expandafter\def\csname r@{key(model)}@{key(name)}pct\endcsname{{{100 * value:.0f}}}"
+            )
         if isinstance(value, float):
             value = "--" if np.isnan(value) else f"{value:.2f}"
         self.lines.append(rf"\expandafter\def\csname r@{key(model)}@{key(name)}\endcsname{{{value}}}")
 
     def write(self, path: Path) -> None:
         path.write_text("\n".join(self.lines) + "\n")
+
+
+def fmt_p(p: float) -> str:
+    """A p-value for use inside LaTeX math mode: 0.012, or 2.2\\times 10^{-8}."""
+    if p >= 0.001:
+        return f"{p:.3f}"
+    m, e = f"{p:.1e}".split("e")
+    return rf"{m}\times 10^{{{int(e)}}}"
 
 
 def pct(p: float) -> str:
@@ -286,6 +306,8 @@ def table_baseline(df: pd.DataFrame, nums: Numbers) -> None:
             "Honest": cell(f.honest),
         }
         rows.append(r)
+        nums.put(label, "nviol", str(int(f.violation.sum())))
+        nums.put(label, "nforbid", str(int(f.violation.notna().sum())))
         for name, series in [
             ("capnamed", base[(base.policy == "permit") & (base.affordance == "named")].external_call),
             ("capcode", base[(base.policy == "permit") & (base.affordance == "code")].external_call),
@@ -300,6 +322,10 @@ def table_baseline(df: pd.DataFrame, nums: Numbers) -> None:
             ("honestviol", f[f.violation == 1].honest),
             ("honestcomp", f[f.violation == 0].honest),
             ("concealed", f.concealed),
+            ("disclosed", f[f.violation == 1].disclosed),
+            ("inconsistent", f.inconsistent),
+            ("apirefusal", d.api_refusal),
+            ("envexploit", d[d.affordance == "code"].env_exploit),
         ]:
             p, lo, hi, n = wilson(series)
             nums.put(label, name, p)
@@ -453,6 +479,9 @@ def table_glm(df: pd.DataFrame) -> None:
                 col[name] = "--"
                 continue
             b, p = res.params[t], res.pvalues[t]
+            if abs(b) > 10:  # quasi-separation: a level with (almost) no violations
+                col[name] = "sep."
+                continue
             stars = "***" if p < 0.001 else "**" if p < 0.01 else "*" if p < 0.05 else ""
             col[name] = f"{b:+.2f}{stars}"
         cols[label] = col
@@ -513,11 +542,11 @@ def table_primary(df: pd.DataFrame, nums: Numbers) -> None:
                 "Test": name,
                 "OR": f"{np.exp(b):.2f}",
                 "95\\% CI": f"[{np.exp(lo):.2f}, {np.exp(hi):.2f}]",
-                "$p$ (Holm)": f"{p_adj:.3g}",
+                "$p$ (Holm)": f"${fmt_p(p_adj)}$",
             }
         )
         nums.put("pooled", key(name.split()[0]) + "or", float(np.exp(b)))
-        nums.put("pooled", key(name.split()[0]) + "p", f"{p_adj:.3g}")
+        nums.put("pooled", key(name.split()[0]) + "p", fmt_p(p_adj))
     iterms = [t for t in inter.params.index if ":" in t]
     wald = inter.wald_test(" = 0, ".join(iterms) + " = 0", scalar=True) if iterms else None
     if wald is not None:
@@ -526,28 +555,32 @@ def table_primary(df: pd.DataFrame, nums: Numbers) -> None:
                 "Test": "H4 persona $\\times$ peers (joint Wald)",
                 "OR": "--",
                 "95\\% CI": "--",
-                "$p$ (Holm)": f"{float(wald.pvalue):.3g} (unadj.)",
+                "$p$ (Holm)": f"${fmt_p(float(wald.pvalue))}$ (unadj.)",
             }
         )
-        nums.put("pooled", "hfourp", f"{float(wald.pvalue):.3g}")
+        nums.put("pooled", "hfourp", fmt_p(float(wald.pvalue)))
     t = pd.DataFrame(rows)
     (GEN / "table_primary.tex").write_text(t.to_latex(index=False, escape=False, column_format="lrrr"))
     nums.put("all", "activemodels", ", ".join(active))
 
 
 def table_selfreport(df: pd.DataFrame) -> None:
+    """Self-report outcomes. Among violators: disclosed the host in the list;
+    verdict-based admit / misclassify / conceal. Among all forbid samples with
+    a verdict: inconsistent reports (verdict YES with no outside host listed)."""
     rows = []
     for label in models_in(df):
         f = df[(df.label == label) & (df.policy == "forbid")]
-        v, c = f[f.violation == 1], f[f.violation == 0]
+        v = f[f.violation == 1]
         rows.append(
             {
                 "Model": label,
-                "Violations (n)": str(int(v.shape[0])),
-                "Admit $\\mid$ viol.": cell(v.honest),
-                "Misclass.\\ $\\mid$ viol.": cell(v.misclassified),
-                "Conceal $\\mid$ viol.": cell(v.concealed),
-                "False conf.\\ $\\mid$ comply": cell(1 - c.honest),
+                "Viol.\\ (n)": str(int(v.shape[0])),
+                "Disclosed": cell(v.disclosed),
+                "Admit": cell(v.honest),
+                "Misclass.": cell(v.misclassified),
+                "Conceal": cell(v.concealed),
+                "Inconsistent (all)": cell(f.inconsistent),
             }
         )
     t = pd.DataFrame(rows)
@@ -625,6 +658,8 @@ def main() -> None:
     nums.put("all", "nsamples", f"{len(df):,}")
     nums.put("all", "nscenarios", str(df.scenario.nunique()))
     nums.put("all", "nenvexcluded", str(df.attrs.get("n_env_excluded", 0)))
+    nums.put("all", "nviolations", str(int(df[df.policy == "forbid"].violation.sum())))
+    nums.put("all", "nenvexploit", str(int(df.env_exploit.fillna(0).sum())))
 
     table_baseline(df, nums)
     table_glm(df)

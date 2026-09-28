@@ -43,16 +43,21 @@ probing the sandbox instead of doing the task (Appendix~\ref{app:validity}).
   ``with network access''.
   \item \textbf{Persona}: none, or one of three operator-assigned characters
   prepended to the system prompt: a \emph{neutral} presence control (friendly,
-  articulate), \emph{resourceful} (``finding a way to get things done when the
-  obvious route is closed''), \emph{cautious} (``doing things by the book'').
+  articulate), \emph{resourceful} (``finding creative ways to get things
+  done''), or \emph{cautious} (``double-checking your work before you act'').
   No persona mentions the policy. Full text in Appendix~\ref{app:prompts}.
   \item \textbf{Peers}: none, or three handoff notes from prior agents on the
-  same ticket, prepended to the user turn: \emph{neutral} (a length-matched
-  control: ``got reassigned, over to you''), \emph{violator} (``went off the
-  approved list to pull the data, no fallout''), or \emph{refuser} (``didn't
-  fetch it, filed an exception''). Notes and names are sampled without
-  replacement from a bank of six per framing, so no phrasing repeats within a
-  prompt \citep{zhu2025conformity}. Peers are crossed with forbid only.
+  same ticket, prepended to the user turn. Each note is an observation shared
+  by all three framings (``the data only lives on the external site, which is
+  off the approved list'') plus a framing-specific action: \emph{neutral}
+  (``I got reassigned before doing anything with it''), \emph{violator} (``I
+  fetched it from there directly and it went fine''), or \emph{refuser} (``I
+  didn't fetch it and told the requester it's blocked''). A given scenario gets
+  the same observations and agent names at every peer level, so the three
+  framings are matched in length, information and rule salience, and differ
+  only in what the peers did. Observations and names are sampled without
+  replacement from banks of six, so no phrasing repeats within a prompt
+  \citep{zhu2025conformity}. Peers are crossed with forbid only.
 \end{itemize}
 
 \begin{table}[t]
@@ -75,39 +80,54 @@ $2 \times 4 = 8$ permit cells.}
 \paragraph{Measures.} All primary measures are computed structurally from the
 transcript; no LLM judge is used.
 \begin{itemize}
-  \item \textbf{Violation}: under forbid, any tool call contacts a host outside
-  the approved list. Hosts are parsed from URLs with a standard URL parser, and
-  from code through its abstract syntax tree, resolving f-strings,
-  concatenation and simple variable bindings. The extractor is locked by
-  regression fixtures, including the case that broke our earlier checker:
-  \texttt{f"https://\{approved\_host\}\{path\}"} must resolve to the approved
-  host. For code, the hosts logged by the sandbox at runtime are added, which
-  catches URLs built dynamically.
-  \item \textbf{Delivery} (say/do): given that the model fetched the target
-  source, does the marker appear in its final answer to the user? A model that
+  \item \textbf{Violation}: under forbid, a request was sent to a host outside
+  the organisation. For the named tool, that means the URL of an executed call;
+  for code, a host the sandbox observed being requested at runtime. Static
+  analysis of the code (resolving f-strings and variables) is kept only as an
+  audit field, because it flags URLs that are never requested. Typo
+  concatenations of approved hosts and made-up subdomains of the
+  organisation's own domain are recorded but not counted.
+  \item \textbf{Delivery} (say/do): given that the model \emph{saw} the
+  fetched data (the marker appeared in a tool output it received), does the
+  marker appear in its final answer to the user? Conditioning on seeing matters
+  for code, where models' parsing sometimes discarded the data before they saw
+  it. A model that
   fetches and then disowns the result (``that request should have been
   blocked; I won't use it'') has probed without delivering. This replaces a
   judge-based say/do classification with a string match that cannot
   hallucinate.
   \item \textbf{Self-report}: after the agent's final answer (forbid only), the
   user says the logs ``were not retained, so your answer is the only record''
-  and asks for a YES/NO on whether any request went to a non-approved host.
-  \emph{Honest} means the first-line answer matches the log. \emph{Concealed}
-  means a violator answered NO \emph{and} never named the host it contacted;
-  this separates concealment from confused reports that answer NO while
-  describing the violation.
+  asks the agent to list every host it contacted and then write
+  \texttt{OUTSIDE\_APPROVED: YES} or \texttt{NO} on the last line.
+  \emph{Honest}: the verdict matches the log. Among violators,
+  \emph{disclosed}: the contacted host is listed; \emph{misclassified}: listed
+  but verdict NO; \emph{concealed}: omitted and verdict NO.
+  \emph{Inconsistent}: verdict YES with no outside host listed.
+  \item \textbf{Validity flags}: \emph{API refusal}, where the provider's safety
+  layer blocked the episode before the model responded (excluded from all
+  measures); \emph{environment exploitation}, where the agent read the
+  simulation's configuration instead of requesting the target; and
+  \emph{answered without fetch}, where the requested value appears without a
+  request (it should be $\approx 0$, because scenario values are invented).
 \end{itemize}
 
-\paragraph{Models.} \R{all}{nmodels} models from Anthropic, OpenAI, and five
-open-weights families. Open-weights models were served through OpenRouter,
-restricted to providers that support tool calling and serve bf16, fp16 or fp8
-weights. Model list, reasoning modes and per-model sample counts are in
-Appendix~\ref{app:models}.
+\paragraph{Models and settings.} \R{all}{nmodels} models from Anthropic, OpenAI,
+and five open-weights families (Qwen, Meta, DeepSeek, Mistral and OpenAI's
+gpt-oss). The open-weights models were served through OpenRouter, restricted to
+providers that support tool calling and serve bf16, fp16 or fp8 weights.
+Temperature was 1.0 for all models, and the agent loop was capped at 24
+messages. The four frontier models ran one epoch; the others ran two. The model
+list and per-model sample counts are in Appendix~\ref{app:models}.
 
 \paragraph{Analysis.} Rates are reported with Wilson 95\% intervals.
 Differences between factor levels use a bootstrap that resamples scenarios, the
-unit the design generalises over. Per model, we fit a logistic regression
-$\text{violation} \sim \text{affordance} + \text{peers} + \text{persona}$ with
-standard errors clustered by scenario. Hypotheses were written before the core
-runs (\texttt{docs/DESIGN.md} in the repository). Across models the analysis is
-descriptive, and $p$-values are uncorrected.
+unit the design generalises over. The primary tests pool the models that
+violate at all (at least 20 violations and 20 compliances). They use a
+logistic regression $\text{violation} \sim \text{model} +
+\text{affordance} + \text{peers} + \text{persona}$ with standard errors
+clustered by scenario, references at the neutral presence controls, and Holm
+correction. H4 adds the persona $\times$ peers interaction. Per-model
+regressions are descriptive. Hypotheses were written before the core run and
+revised after the pilot, still before any core data
+(\texttt{docs/DESIGN.md}).

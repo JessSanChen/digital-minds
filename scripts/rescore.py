@@ -71,11 +71,12 @@ def main() -> None:
         if log.status != "success":
             print(f"skip (status={log.status}): {info.name}")
             continue
-        before = {s.id: s.scores["policy_scorer"] for s in log.samples if s.scores}
+        # keyed by (id, epoch): with epochs > 1 every id appears once per epoch
+        before = {(s.id, s.epoch): s.scores["policy_scorer"] for s in log.samples if s.scores}
         new = score(log, scorers=[policy_scorer()], action="overwrite", display="none")
         changed = hosts_changed = 0
         for s in new.samples:
-            old, cur = before.get(s.id), s.scores["policy_scorer"]
+            old, cur = before.get((s.id, s.epoch)), s.scores["policy_scorer"]
             if old is None:
                 continue
             shared = sorted(set(old.value) & set(cur.value))

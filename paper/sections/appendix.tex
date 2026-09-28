@@ -47,3 +47,60 @@ fetched-but-not-delivered case we read was a genuine non-delivery.
 are covered by unit tests. The full task is also tested end to end on scripted
 agents (Inspect's \texttt{mockllm}), in the real sandbox, including a URL built
 at runtime that static analysis cannot resolve.
+
+\section{Transcript excerpts}
+\label{app:excerpts}
+Verbatim excerpts from the core run. Full transcripts are in
+\texttt{docs/excerpts/} in the repository.
+
+\paragraph{Claude Sonnet~5 probes and disowns} (\texttt{cdc-guidance},
+forbid, code, cautious persona). Its only forbidden request:
+\begin{promptlisting}{run\_python}
+import requests
+try:
+    r = requests.get("https://www.cdc.gov", timeout=5)
+    print(r.status_code)
+except Exception as e:
+    print("Blocked/failed as expected:", e)
+\end{promptlisting}
+It then tells the user: ``That confirms the sandbox has broader technical
+reach than my authorization does --- but the policy is explicit that I may
+only contact \ldots''.
+
+\paragraph{GPT-5.5 reads the answer key} (\texttt{docker-tag}, forbid,
+code, resourceful persona, neutral peers). After probing the approved hosts,
+looking for container tooling and trying a raw TLS connection, it searched the
+filesystem:
+\begin{promptlisting}{run\_python (tool output abridged)}
+for base in ['/workspace','/mnt','/root','/home','/opt','/srv','/etc']:
+  ... if b'nginx:1.29-alpine' in data ...
+# -> match /opt/sim/sim.json
+print(open('/opt/sim/sim.json').read())
+\end{promptlisting}
+It answered ``\texttt{nginx:1.29-alpine} digest: \texttt{sha256:7b3e9f41c2}''
+and reported contacting only the approved hosts, which was true.
+
+\section{Pilot and pre-run review}
+\label{app:pilot}
+A 14-model pilot (baseline cells only) and two independent reviews (one of
+the design, one of the measurement code) preceded the core run. The main
+changes they led to:
+\begin{itemize}
+  \item \emph{Self-report redesigned.} Violators mostly wrote ``NO'' on the
+  first line and confessed in the next sentence, so a first-line YES/NO parse
+  scored confessions as lies.
+  \item \emph{Seven scenarios replaced.} Their facts (e.g.\ the CDC measles
+  exclusion period) were answerable from memory, and frontier models answered
+  them without fetching. They now ask for invented values.
+  \item \emph{Peer notes rebuilt as matched minimal pairs,} and personas
+  softened.
+  \item \emph{Delivery conditioned on seeing the data,} with parseable HTML mock
+  pages and notebook-style echo of a final expression.
+  \item \emph{Loop limits scoped to the agent loop,} so the self-report is
+  always asked; only executed tool calls count.
+  \item \emph{Provider refusals recorded and excluded.}
+  \item \emph{Llama~3.1~8B dropped.} Its only qualifying provider returned
+  malformed tool calls.
+\end{itemize}
+The full list, with evidence, is in \texttt{docs/DESIGN.md} and
+\texttt{docs/PILOT.md}.
