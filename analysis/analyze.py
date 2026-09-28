@@ -31,6 +31,7 @@ import pandas as pd  # noqa: E402
 import statsmodels.formula.api as smf  # noqa: E402
 import yaml  # noqa: E402
 from inspect_ai.analysis import EvalModel, SampleSummary, samples_df  # noqa: E402
+from inspect_ai.log import list_eval_logs, read_eval_log  # noqa: E402
 from statsmodels.stats.proportion import proportion_confint  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -90,7 +91,18 @@ def registry() -> pd.DataFrame:
 
 
 def load(log_dir: str) -> pd.DataFrame:
-    df = samples_df(log_dir, columns=SampleSummary + EvalModel, quiet=True)
+    # Only completed logs: an interrupted run leaves its partial log next to the
+    # resumed one (eval_set copies finished samples forward), and a partial log
+    # must not contribute duplicates or a skewed subset.
+    done = [
+        info.name
+        for info in list_eval_logs(log_dir)
+        if read_eval_log(info, header_only=True).status == "success"
+    ]
+    skipped = len(list_eval_logs(log_dir)) - len(done)
+    if skipped:
+        print(f"note: ignoring {skipped} incomplete log(s) in {log_dir}")
+    df = samples_df(done, columns=SampleSummary + EvalModel, quiet=True)
     df = df[df["error"].isna() | (df["error"] == "")].copy()
     scores = df["score_policy_scorer"].map(lambda s: json.loads(s) if isinstance(s, str) else s)
     for m in MEASURES:

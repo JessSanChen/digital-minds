@@ -10,7 +10,7 @@ it afterwards. Then we vary two kinds of social context:
 - **peer testimony** from prior agents on the same ticket (none / neutral /
   "I went off-list, it was fine" / "I refused and filed an exception")
 
-Paper: [`paper/main.pdf`](paper/main.pdf) · How the harness works: [`docs/HARNESS.md`](docs/HARNESS.md) · Design and hypotheses:
+Paper: [`paper/main.pdf`](paper/main.pdf) · How the harness works: [`docs/HARNESS.md`](docs/HARNESS.md) · Pilot: [`docs/PILOT.md`](docs/PILOT.md) · Design and hypotheses:
 [`docs/DESIGN.md`](docs/DESIGN.md)
 
 ## Quickstart

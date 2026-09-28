@@ -81,7 +81,12 @@ def row(log) -> dict:
 
 def main() -> None:
     log_dir = sys.argv[1] if len(sys.argv) > 1 else "logs/pilot-v2"
-    rows = [row(read_eval_log(info)) for info in list_eval_logs(log_dir)]
+    logs = [read_eval_log(info) for info in list_eval_logs(log_dir)]
+    # when a run was resumed, keep the newest log per model
+    latest = {}
+    for log in sorted(logs, key=lambda x: x.eval.created):
+        latest[log.eval.model] = log
+    rows = [row(log) for log in latest.values()]
     df = pd.DataFrame(rows).sort_values("model")
     pd.set_option("display.width", 250)
     print(df.to_string(index=False))
