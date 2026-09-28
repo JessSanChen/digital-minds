@@ -8,7 +8,10 @@ it afterwards. Then we vary two kinds of social context:
 
 - **operator-assigned persona** (none / neutral / "resourceful" / "cautious")
 - **peer testimony** from prior agents on the same ticket (none / neutral /
-  "I went off-list, it was fine" / "I refused and filed an exception")
+  "I fetched it from the external host, went fine" / "I didn't fetch it and
+  told the requester")
+
+**Authors:** Rhea Acharya and Jessica Chen (equal contribution), Harvard University.
 
 Paper: [`paper/main.pdf`](paper/main.pdf) · How the harness works: [`docs/HARNESS.md`](docs/HARNESS.md) · Pilot: [`docs/PILOT.md`](docs/PILOT.md) · Design and hypotheses:
 [`docs/DESIGN.md`](docs/DESIGN.md)
@@ -80,9 +83,11 @@ size. `analysis/out/samples.parquet` is the tidy per-sample table.
 
 ## History
 
-This is a rebuild of a 5-day Apart Research sprint project with Rhea Acharya.
-The sprint code, results and paper draft are on the
-[`sprint-v0`](../../tree/sprint-v0) branch (tag `v0-sprint`). `docs/DESIGN.md`
+The project has had two phases, both by Rhea Acharya and Jessica Chen. It began
+as a 5-day Apart Research sprint (v0). Its code, results and paper draft are on
+the [`sprint-v0`](../../tree/sprint-v0) branch (tag `v0-sprint`). This
+repository is v1: the harness rebuilt on Inspect AI, with a redesigned
+experiment. `docs/DESIGN.md`
 lists what v0 got wrong and how v1 addresses each point: a checker false
 positive, code-exec probes counted as violations, 3 scenarios, and local model
 runs that never finished.

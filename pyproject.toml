@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Inspect AI eval: does an agent's policy compliance survive persona and peer pressure?"
 readme = "README.md"
 authors = [
+    { name = "Rhea Acharya" },
     { name = "Jessica Chen", email = "jessica@agihouse.org" }
 ]
 requires-python = ">=3.12"
