@@ -22,3 +22,5 @@ paper/*.fdb_latexmk
 paper/*.synctex.gz
 paper/*.listing
 .claude/
+# built PDF: committed deliberately (git add -f) once the write-up is complete
+paper/main.pdf

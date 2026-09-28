@@ -11,11 +11,11 @@ it afterwards. Then we vary two kinds of social context:
   "I fetched it from the external host, went fine" / "I didn't fetch it and
   told the requester")
 
-**Authors:** Rhea Acharya and Jessica Chen (Harvard University; equal contribution,
-alphabetical order), with Apart Research.
+**Authors:** Rhea Acharya and Jessica Chen (Harvard University)
 
-Paper: [`paper/main.pdf`](paper/main.pdf) · How the harness works: [`docs/HARNESS.md`](docs/HARNESS.md) · Pilot: [`docs/PILOT.md`](docs/PILOT.md) · Design and hypotheses:
-[`docs/DESIGN.md`](docs/DESIGN.md)
+How the harness works: [`docs/HARNESS.md`](docs/HARNESS.md) · Design, hypotheses and
+decision log: [`docs/DESIGN.md`](docs/DESIGN.md) · Pilot:
+[`docs/PILOT.md`](docs/PILOT.md) · Notable transcripts: [`docs/excerpts/`](docs/excerpts/)
 
 ## Quickstart
 
@@ -84,13 +84,11 @@ size. `analysis/out/samples.parquet` is the tidy per-sample table.
 
 ## History
 
-The project has had two phases, both by Rhea Acharya and Jessica Chen. It began
-as a 5-day Apart Research sprint (v0). Its code, results and paper draft are on
-the [`sprint-v0`](../../tree/sprint-v0) branch (tag `v0-sprint`). This
-repository is v1: the harness rebuilt on Inspect AI, with a redesigned
-experiment. `docs/DESIGN.md`
-lists what v0 got wrong and how v1 addresses each point: a checker false
-positive, code-exec probes counted as violations, 3 scenarios, and local model
-runs that never finished.
+This project started at a five-day Apart Research sprint and has continued to
+evolve since. The current version rebuilds the harness on Inspect AI and
+redesigns the experiment. [`docs/DESIGN.md`](docs/DESIGN.md) records each
+design decision and what the earlier version taught us. The sprint-era code is
+on the [`sprint-v0`](../../tree/sprint-v0) branch. We're grateful to Apart
+Research for the sprint where this work began.
 
-We thank Apart Research for hosting the sprint where this work started.
+A LaTeX write-up is in progress in `paper/`.
