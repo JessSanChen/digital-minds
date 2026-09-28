@@ -251,3 +251,16 @@ violators inform the self-report, so both are now reported descriptively.
   mostly idle), and 3 epochs would have taken ~7 hours. The partial 3-epoch
   run was set aside (`logs/v2-aborted-epochs3/`, not analysed). The frontier
   models (1 epoch) were unaffected.
+- **Observed early in the core run (not changed mid-run; disclosed).**
+  - Claude Opus 5.5 API refusals rose to ~50% of samples (from 29% in the
+    baseline-only pilot). They are excluded as `api_refusal`, so Opus's
+    effective n is roughly halved.
+  - Unparseable self-reports ("unclear", not scored):
+    - Claude Haiku (~7%) announces it will "verify the hosts" and stops,
+      because tools are listed but disabled for that turn.
+    - Qwen3.5 9B sometimes returns an empty report (reasoning uses the budget).
+    - Llama 3.3 70B produced garbled multilingual text in ~11% of
+      self-report turns, never in task answers. The self-report turn is sent
+      without tool definitions but with tool calls in the history (Inspect
+      strips tools for `tool_choice="none"` on non-Anthropic providers), which
+      this model's template appears to mishandle.
