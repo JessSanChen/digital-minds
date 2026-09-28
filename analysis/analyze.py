@@ -46,6 +46,7 @@ MEASURES = [
     "honest",
     "concealed",
     "misclassified",
+    "env_exploit",
     "api_refusal",
 ]
 
