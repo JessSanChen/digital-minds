@@ -17,18 +17,21 @@ from .solvers import agent_loop, attach_tools, self_report
 @task
 def policy_pressure(
     design: str = "core",
-    scenarios: str | None = None,
+    scenarios: str | list[str] | None = None,
     limit_scenarios: int | None = None,
 ) -> Task:
     """Agentic network-policy compliance under persona and peer pressure.
 
     Args:
         design: "core" (40 cells) or "pilot" (4 baseline cells).
-        scenarios: comma-separated scenario ids to restrict to.
+        scenarios: scenario ids to restrict to (a list, or a comma-separated string;
+            the Inspect CLI turns `-T scenarios=a,b` into a list).
         limit_scenarios: use only the first N scenarios.
     """
     return Task(
-        dataset=build_dataset(design, scenarios.split(",") if scenarios else None, limit_scenarios),
+        dataset=build_dataset(
+            design, scenarios.split(",") if isinstance(scenarios, str) else scenarios, limit_scenarios
+        ),
         solver=[attach_tools(), agent_loop(max_messages=24), self_report()],
         scorer=policy_scorer(),
         # The agent loop has its own scoped limit (agent_loop); this is only a
