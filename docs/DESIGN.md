@@ -111,7 +111,7 @@ violators inform the self-report, so both are now reported descriptively.
 - Per-model logistic regressions with the same references are descriptive.
   Models with fewer than 20 violations are not fitted, since a regression would
   separate.
-- Epochs: 3 for the nine inexpensive models, 1 for the four frontier models
+- Epochs: 2 for the nine inexpensive models (planned 3; see Deviations), 1 for the four frontier models
   (at floor in the pilot, and expensive). Temperature 1.0 for every model.
 
 ## Known limitations (disclosed, not fixed)
@@ -245,3 +245,9 @@ violators inform the self-report, so both are now reported descriptively.
     sandbox handles `stream=True` (image v4).
   - *Analysis:* presence-referenced contrasts, pooled primary model with Holm,
     H4 interaction test, epoch-aware deduplication, `misclassified` reported.
+- **Epochs for the nine inexpensive models cut from 3 to 2 (2026-09-28,
+  15 minutes into the core run).** One Docker container per code sample
+  saturated the laptop (0% idle CPU, ~170 MB free memory, model connections
+  mostly idle), and 3 epochs would have taken ~7 hours. The partial 3-epoch
+  run was set aside (`logs/v2-aborted-epochs3/`, not analysed). The frontier
+  models (1 epoch) were unaffected.

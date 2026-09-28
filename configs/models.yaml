@@ -18,8 +18,10 @@ openrouter_provider:
 
 # epochs: repeats per sample. Allocated after the pilot: the four frontier
 # models sat at 0% violations and are expensive, so 1 epoch; every other model
-# is cheap and either violates or sits near the floor, so 3 epochs for power.
-default_epochs: 3
+# is cheap and either violates or sits near the floor, so more epochs for power
+# (planned 3; cut to 2 during the run because Docker container churn saturated
+# the laptop and 3 would have taken ~7 hours; see docs/DESIGN.md).
+default_epochs: 2
 
 groups:
   anthropic:
