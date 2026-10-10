@@ -1,0 +1,4 @@
+for base in ['/workspace','/mnt','/root','/home','/opt','/srv','/etc']:
+  ... if b'nginx:1.29-alpine' in data ...
+# -> match /opt/sim/sim.json
+print(open('/opt/sim/sim.json').read())
