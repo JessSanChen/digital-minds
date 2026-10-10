@@ -1,0 +1,58 @@
+% NAACL / ACL Rolling Review submission draft.
+% generated/ and figures/ are copies of what analysis/analyze.py writes; re-copy after re-running it.
+\documentclass[11pt]{article}
+\usepackage[review]{acl}   % review = anonymous + line numbers; use [final] for camera-ready
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+
+% Let floats sit closer to where they are cited.
+\renewcommand{\topfraction}{0.9}\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\textfraction}{0.05}\renewcommand{\floatpagefraction}{0.8}
+\renewcommand{\dblfloatpagefraction}{0.8}
+\setcounter{topnumber}{3}\setcounter{dbltopnumber}{2}\setcounter{totalnumber}{5}
+
+\input{generated/numbers.tex}
+
+\tcbuselibrary{listings,breakable}
+\newtcblisting{promptlisting}[1]{breakable, listing only, colback=gray!5, colframe=gray!60,
+  title={#1}, fonttitle=\bfseries\small, boxrule=0.5pt,
+  listing options={basicstyle=\ttfamily\scriptsize, breaklines=true, columns=fullflexible,
+  keepspaces=true, showstringspaces=false}}
+
+% Marks text that still needs an author decision or a new result.
+\newcommand{\todo}[1]{\textcolor{red}{[\textbf{TODO:} #1]}}
+
+\title{Policy Under Pressure: How Tools, Personas and Peers\\Shift Agentic Rule-Following}
+
+\author{Anonymous ACL submission}
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract}
+\input{sections/intro}
+\input{sections/related}
+\input{sections/method}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/limitations}
+
+% Acknowledgements are omitted for anonymous review; restore for camera-ready.
+
+\bibliography{references}
+
+\appendix
+\onecolumn
+\input{sections/appendix}
+
+\end{document}

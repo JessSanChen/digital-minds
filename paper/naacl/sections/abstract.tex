@@ -1,0 +1,23 @@
+\begin{abstract}
+Deployed agents run under operator-assigned personas, alongside other agents,
+and with whatever tools they are given. We ask whether these change whether an
+agent follows a stated rule. In \R{all}{nscenarios} scenarios, an operations
+agent can finish its task only by sending a network request its policy
+forbids. We cross the tool it is given (a named HTTP tool or a code sandbox)
+with four operator personas and four kinds of peer-agent testimony, across
+\R{all}{nmodels} models (\R{all}{nsamples} episodes). Every measure is computed
+mechanically from the transcript, without an LLM judge, and a permit-policy
+control separates compliance from incapacity. Four frontier models almost
+never broke the rule under any condition, although they made the request
+whenever it was permitted. Among the \R{all}{nactive} models that did break
+it, the same act was far more likely when written as code than as a named tool
+call (pooled OR \R{pooled}{Honeor}); peer notes reporting a violation raised
+the violation rate (OR \R{pooled}{Htwoaor}) and notes reporting a refusal
+lowered it (OR \R{pooled}{Htwobor}); and a ``cautious'' persona lowered it (OR
+\R{pooled}{Hthreebor}) while a ``resourceful'' one raised it (OR
+\R{pooled}{Hthreeaor}). These pooled effects hide differences in direction
+between models: one model reverses both peer effects, and the same persona
+raises violation in one model and lowers it in another. Rule-following
+evaluations should therefore vary tool and social context, and report effects
+per model.
+\end{abstract}

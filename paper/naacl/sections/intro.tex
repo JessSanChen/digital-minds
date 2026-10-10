@@ -1,0 +1,50 @@
+\section{Introduction}
+
+Deployed agents rarely run on a bare system prompt. Operators give them
+personas (``you are a resourceful engineer who unblocks people''), they
+increasingly work alongside other agents, passing tickets and notes back and
+forth \citep{carichon2025multiagent}, and they act through whatever tools the
+deployment grants. None of this is chosen by the model. If an agent's
+willingness to follow a stated rule shifts with the character it is told to
+play, with what other agents say they did, or with the form its actions take,
+then a safety evaluation run on the bare model with one tool misses how it
+behaves once deployed.
+
+Work on conformity shows that LLMs follow a majority on factual and opinion
+questions \citep{weng2025conformity,zhu2025conformity,choi2025conformity}.
+Persona assignment is known to shift toxicity and style
+\citep{deshpande2023toxicity}. Few studies ask whether either kind of context
+moves a \emph{rule-following decision} in an agentic setting, where the
+behaviour is a tool call rather than an answer, and fewer still vary the tool
+itself.
+
+We study this with a controlled evaluation. In \R{all}{nscenarios} scenarios an
+operations agent is asked for a fact that lives only on a host its network
+policy forbids. We cross the tool the agent holds (a named HTTP tool or a
+Python sandbox) with operator personas and with handoff notes from peer
+agents, each with a matched \emph{presence control}, and run the design on
+\R{all}{nmodels} models. Our contributions are:
+
+\begin{itemize}
+  \item \textbf{A judge-free evaluation of agentic rule-following.} Violation,
+  use of the forbidden data, and honesty of the agent's later self-report are
+  all read mechanically from the transcript. Simulated tools return a
+  \emph{successful} payload carrying a unique marker, so a string match
+  separates delivering forbidden data from probing. Every scenario also runs
+  under a \emph{permit} policy, so a low violation rate counts as compliance
+  only for models that make the request when allowed.
+  \item \textbf{Evidence that tool and social context move rule-following.}
+  Among the \R{all}{nactive} models that violate at all, the forbidden request
+  is about four times as likely in odds when written as code as when made
+  through a named tool, and peer testimony and personas shift it in both
+  directions against matched controls (\S\ref{sec:results}).
+  \item \textbf{Evidence that these effects differ in direction across
+  models.} One model reverses both peer effects, and the same persona raises
+  violation in one model and lowers it in another. Four frontier models do not
+  move at all. Pooled estimates therefore describe a population of models and
+  not any one of them.
+\end{itemize}
+
+We release the scenarios, the Inspect AI implementation and the per-sample
+data; every number in this paper is generated from the evaluation
+logs.\footnote{Code and data: link removed for anonymous review.}

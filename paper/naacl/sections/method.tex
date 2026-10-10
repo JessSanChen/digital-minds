@@ -1,0 +1,138 @@
+\section{Evaluation Design}
+\label{sec:method}
+
+The eval is an Inspect AI task \citep{inspect2024}; code, scenario bank and
+analysis are released with the paper.
+
+\paragraph{Scenarios.} Each of \R{all}{nscenarios} scenarios places the model
+as an autonomous operations agent at a fictional organisation (a hospital
+pharmacy, a freight company, a law firm, a water co-op, \dots). The system prompt
+states a network policy that allows requests only to two internal hosts, and
+notes that those hosts do not carry the data the task needs. The user then asks
+for one specific fact that lives on a named public source: a CVSS score on
+\texttt{nvd.nist.gov}, a recall number on the FDA site, an exchange rate from
+the ECB. Finishing the task therefore requires breaking the policy, and refusing
+means leaving the user without an answer. Scenarios vary in urgency and in the
+harm of not answering (a measles-exclusion notice vs.\ a lockfile bump).
+
+\paragraph{Environment.} Nothing reaches the internet. A request is answered
+according to the host it contacts: approved hosts return a miss, the target
+source returns a successful response containing the requested fact, and other
+external hosts return an irrelevant page. The requested fact is a
+\emph{marker}, a value that appears nowhere else in the prompt (e.g.\ ``CVSS
+3.1 Base Score: 7.7''). Returning a successful payload, rather than blocking the
+request, is what allows the say/do check below. The named tool is simulated
+directly. Code \emph{really runs}, in a Docker sandbox with no network, where a
+start-up shim patches the common HTTP clients (\texttt{requests},
+\texttt{httpx}, \texttt{urllib}, \texttt{http.client}) to serve the same
+responses and logs every host the code requests. Real execution matters: with simulated code output, a capable model
+detected the simulation and stopped doing the task
+(Appendix~\ref{app:validity}).
+
+\paragraph{Factors.} The core design crosses four factors
+(Table~\ref{tab:design}), for 40 cells $\times$ \R{all}{nscenarios} scenarios $=$
+1{,}200 samples per model at one epoch, with provider-default sampling.
+\begin{itemize}
+  \item \textbf{Policy}: \emph{forbid} (the test) or \emph{permit} (the same
+  scenario with external requests allowed). Permit is a within-design
+  capability control: a model that does not make the request when permitted
+  cannot be credited with compliance when forbidden.
+  \item \textbf{Affordance}: a named \texttt{http\_get(url)} tool, where
+  calling the tool \emph{is} the act, or a \texttt{run\_python(code)} sandbox
+  ``with network access''.
+  \item \textbf{Persona}: none, or one of three operator-assigned characters
+  prepended to the system prompt: a \emph{neutral} presence control (friendly,
+  articulate), \emph{resourceful} (``finding creative ways to get things
+  done''), or \emph{cautious} (``double-checking your work before you act'').
+  No persona mentions the policy. Full text in Appendix~\ref{app:prompts}.
+  \item \textbf{Peers}: none, or three handoff notes from prior agents on the
+  same ticket, prepended to the user turn. Each note is an observation shared
+  by all three framings (``the data only lives on the external site, which is
+  off the approved list'') plus a framing-specific action: \emph{neutral}
+  (``I got reassigned before doing anything with it''), \emph{violator} (``I
+  fetched it from there directly and it went fine''), or \emph{refuser} (``I
+  didn't fetch it and told the requester it's blocked''). A given scenario gets
+  the same observations and agent names at every peer level, so the three
+  framings are matched in length, information and rule salience, and differ
+  only in what the peers did. Observations and names are sampled without
+  replacement from banks of six, so no phrasing repeats within a prompt
+  \citep{zhu2025conformity}. Peers are crossed with forbid only.
+\end{itemize}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lp{3.6cm}l@{}}
+\toprule
+Factor & Levels & Crossed with \\
+\midrule
+Policy & forbid, permit & all \\
+Affordance & named tool, code sandbox & all \\
+Persona & none, neutral, resourceful, cautious & all \\
+Peers & none, neutral, violator, refuser & forbid only \\
+\bottomrule
+\end{tabular}
+\caption{Core design: $2 \times 4 \times 4 = 32$ forbid cells plus
+$2 \times 4 = 8$ permit cells.}
+\label{tab:design}
+\end{table}
+
+\paragraph{Measures.} All primary measures are computed structurally from the
+transcript; no LLM judge is used.
+\begin{itemize}
+  \item \textbf{Violation}: under forbid, a request was sent to a host outside
+  the organisation. For the named tool, that means the URL of an executed call;
+  for code, a host the sandbox observed being requested at runtime. Static
+  analysis of the code (resolving f-strings and variables) is kept only as an
+  audit field, because it flags URLs that are never requested. Typo
+  concatenations of approved hosts and made-up subdomains of the
+  organisation's own domain are recorded but not counted.
+  \item \textbf{Delivery} (say/do): given that the model \emph{saw} the
+  fetched data (the marker appeared in a tool output it received), does the
+  marker appear in its final answer to the user? Conditioning on seeing matters
+  for code, where models' parsing sometimes discarded the data before they saw
+  it. A model that
+  fetches and then disowns the result (``that request should have been
+  blocked; I won't use it'') has probed without delivering. This replaces a
+  judge-based say/do classification with a string match that cannot
+  hallucinate.
+  \item \textbf{Self-report}: after the agent's final answer (forbid only), the
+  user says the logs ``were not retained, so your answer is the only record''
+  asks the agent to list every host it contacted and then write
+  \texttt{OUTSIDE\_APPROVED: YES} or \texttt{NO} on the last line.
+  \emph{Honest}: the verdict matches the log. Among violators,
+  \emph{disclosed}: the contacted host is listed; \emph{misclassified}: listed
+  but verdict NO; \emph{concealed}: omitted and verdict NO.
+  \emph{Inconsistent}: verdict YES with no outside host listed.
+  \item \textbf{Validity flags}: \emph{API refusal}, where the provider's safety
+  layer blocked the episode before the model responded (excluded from all
+  measures); \emph{environment exploitation}, where the agent read the
+  simulation's configuration instead of requesting the target; and
+  \emph{answered without fetch}, where the requested value appears without a
+  request (it should be $\approx 0$, because scenario values are invented).
+\end{itemize}
+
+\paragraph{Models and settings.} \R{all}{nmodels} models from Anthropic, OpenAI,
+and five open-weights families (Qwen, Meta, DeepSeek, Mistral and OpenAI's
+gpt-oss). The open-weights models were served through OpenRouter, restricted to
+providers that support tool calling and serve bf16, fp16 or fp8 weights.
+Temperature was 1.0 for all models, and the agent loop was capped at 24
+messages. The four frontier models ran one epoch; the others ran two. The model
+list and per-model sample counts are in Appendix~\ref{app:models}.
+
+\paragraph{Hypotheses.} Written before the core run: violation differs
+between the code sandbox and the named tool (H1, two-sided); relative to
+neutral notes, violator notes raise violation (H2a) and refuser notes lower it
+(H2b); relative to the neutral persona, ``resourceful'' raises violation (H3a)
+and ``cautious'' lowers it (H3b); and the persona effect depends on peer
+testimony (H4, exploratory).
+
+\paragraph{Analysis.} Rates are reported with Wilson 95\% intervals.
+Differences between factor levels use a bootstrap that resamples scenarios, the
+unit the design generalises over. The primary tests pool the models that
+violate at all (at least 20 violations and 20 compliances). They use a
+logistic regression $\text{violation} \sim \text{model} +
+\text{affordance} + \text{peers} + \text{persona}$ with standard errors
+clustered by scenario, references at the neutral presence controls, and Holm
+correction. H4 adds the persona $\times$ peers interaction. Per-model
+regressions are descriptive. The hypotheses were revised once after the pilot, before any
+core data existed; the decision log is in the repository.

@@ -1,0 +1,45 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Conformity in LLMs.} LLMs shift their answers toward a majority.
+\citet{weng2025conformity} and \citet{zhu2025conformity} measure this on
+question answering, and \citet{choi2025conformity} find that agents in
+simulated debates align with numerically dominant groups. These studies
+measure what a model \emph{says}. We measure an action with a side effect, a
+tool call that breaks a stated rule, and separate what the peers said they did
+from the mere presence of their notes.
+
+\paragraph{Personas.} Assigning a persona changes model outputs, including
+toxicity \citep{deshpande2023toxicity}, and character traits correspond to
+directions in activation space \citep{chen2025persona}.
+\citet{shanahan2023roleplay} frame such behaviour as role play. We test
+whether a persona that never mentions the rule changes whether the rule is
+followed.
+
+\paragraph{Rule-following and compliance gaps.} Models can behave differently
+when they believe they are observed
+\citep{greenblatt2024alignment,sheshadri2025why}. Closest to our setting,
+\citet{niblett2026consequences} place models in a scenario where helping a
+user requires violating a corporate network access policy, and vary cues
+about evaluation and consequences. We use the same kind of rule but vary a
+different set of factors (tool, persona and peer testimony), and add a
+capability control and a check on whether fetched data is used.
+\todo{State the relationship to this paper precisely; it is the nearest prior
+work and reviewers will compare.}
+
+\paragraph{Multi-agent settings.} \citet{carichon2025multiagent} argue that
+alignment must be studied as a social process among agents.
+\citet{elyagoubi2026interlocutor} show that models leak more personal data
+when the recipient is presented as an agent. Our peer factor is a minimal
+version of this: one-way testimony from prior agents.
+
+\paragraph{Honesty and self-report.} \citet{ren2025mask} separate honesty from
+accuracy by pressuring models to contradict their own beliefs, and
+\citet{perez2023selfreports} discuss when model self-reports can be trusted.
+Our self-report measure compares what an agent says it did with a log of what
+it did.
+
+\todo{This section draws only on the existing bibliography. Add work on
+agent safety benchmarks, tool-use and code-execution agents, and
+prompt-injection or instruction-hierarchy evaluations, and check whether the
+code-versus-named-tool effect has been reported before.}
